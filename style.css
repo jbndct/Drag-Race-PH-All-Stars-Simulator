@@ -6,7 +6,7 @@
     --bg-image-challenge: url('https://images.unsplash.com/photo-1562071729-6232b5f14445?q=80&w=1974&auto=format&fit=crop'); /* Backstage Mirrors */
     --bg-image-runway: url('https://images.unsplash.com/photo-1608223689218-c073a693246a?q=80&w=1962&auto=format&fit=crop'); /* Glowing Runway */
     --bg-image-lipsync: url('https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=2070&auto=format&fit=crop'); /* Spotlight on Stage */
-    --bg-image-finale: url('https://images.unsplash.com/photo-1514525253161-7a4meddling-7a46d19cd819?q=80&w=1974&auto=format&fit=crop'); /* Gold Confetti */
+    --bg-image-finale: url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1974&auto=format&fit=crop'); /* Gold Confetti */
 }
 
 body {
@@ -91,12 +91,13 @@ body {
 .track-record-table th, .track-record-table td { 
     padding: 0.5rem; 
     text-align: center; 
+    vertical-align: middle;
     border: 1px solid #374151; 
 }
-.placement-WIN { background-color: #3017bf; color: white; font-weight: bold; }
-.placement-HIGH { background-color: #5685d0; }
+.placement-WIN { background-color: #a942a9; color: white; font-weight: bold; }
+.placement-HIGH { background-color: #3b82f6; }
 .placement-SAFE { background-color: #4b5563; }
-.placement-LOW { background-color: #bc5a8d; }
+.placement-LOW { background-color: #ca8a04; }
 .placement-BTM2 { background-color: #d97706; }
 .placement-ELIM { background-color: #be123c; color: white; font-weight: bold; }
 .placement-WINNER { background: linear-gradient(45deg, #fde047, #fbbf24); color: black; font-weight: bold; }
@@ -111,3 +112,4 @@ body {
     border-radius: 9999px;
     color: white;
 }
+
