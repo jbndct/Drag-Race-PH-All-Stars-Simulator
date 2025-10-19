@@ -3,30 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drag Race Philippines Simulator</title>
+    <title>Drag Race PH All Stars Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body id="body-container" class="h-full flex flex-col antialiased items-center justify-center p-4 bg-dynamic">
+<body id="body-container" class="h-full flex flex-col antialiased items-center justify-center p-4 bg-dynamic overflow-hidden">
 
-    <div id="menu-view" class="w-full max-w-lg text-center view">
-        <h1 class="text-7xl md:text-9xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-pink-500 mb-4" style="text-shadow: 0 0 15px rgba(255,255,255,0.3);">DRAG RACE<br>SIMULATOR</h1>
-        <p class="text-gray-300 mb-8 text-lg">May the best queen... WIN!</p>
-        <div class="space-y-4">
-            <button id="standard-mode-btn" class="main-button w-full py-4 rounded-lg text-2xl font-display tracking-widest">Standard Mode</button>
-            <button id="mamapao-mode-btn" class="secondary-button w-full py-4 rounded-lg text-2xl font-display tracking-widest">Mama Pao Mode</button>
+    <!-- ALL STARS HOME SCREEN - More space, new text, more drag! -->
+    <div id="menu-view" class="w-full max-w-xl text-center view stage-frame z-10 relative">
+        <div class="menu-card bg-black/50 backdrop-blur-lg rounded-2xl p-10 md:p-14 border border-yellow-400/30 shadow-2xl shadow-fuchsia-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-crown" width="80" height="80" viewBox="0 0 24 24" stroke-width="1.5" stroke="none" fill="url(#crown-gradient)" stroke-linecap="round" stroke-linejoin="round">
+              <defs>
+                <linearGradient id="crown-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#fde047;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:1" />
+                </linearGradient>
+              </defs>
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+              <path d="M12 6l4 6l5 -4l-2 10h-14l-2 -10l5 4z" />
+            </svg>
+
+            <!-- FIX: New title with responsive font size and a styled "ALL STARS" span -->
+            <h1 class="main-title text-6xl md:text-8xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-pink-500 leading-none">
+                DRAG RACE PH
+                <span class="all-stars-title">ALL STARS</span>
+            </h1>
+            
+            <!-- FIX: New subheading with more space -->
+            <p class="text-lg md:text-xl font-body tracking-wider text-gray-200 mt-8 mb-10">Who will be the Philippines' next Drag Hall of Famer?</p>
+
+            <div class="space-y-5">
+                <button id="standard-mode-btn" class="main-button w-full py-4 rounded-lg text-2xl font-display tracking-widest">Standard Mode</button>
+                <button id="mamapao-mode-btn" class="secondary-button w-full py-4 rounded-lg text-2xl font-display tracking-widest">Mama Pao Mode</button>
+            </div>
         </div>
     </div>
 
-    <div id="selection-view" class="hidden w-full h-full flex-grow container mx-auto flex flex-col view">
+    <div id="selection-view" class="hidden w-full h-full flex-grow container mx-auto flex flex-col view z-10 relative">
         <header class="text-center mb-6">
             <h1 class="text-6xl md:text-7xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-pink-500" style="text-shadow: 0 0 10px rgba(255,255,255,0.2);">Assemble Your Cast</h1>
             <p id="instructions" class="text-gray-300 mt-2"></p>
         </header>
-        <!-- FIX: Added height constraints for mobile (h-3/5 and h-2/5) and reset them for desktop (md:h-auto) -->
         <main class="flex-grow flex flex-col md:flex-row gap-6 min-h-0">
             <div class="h-3/5 md:h-auto md:w-3/5 lg:w-2/3 flex flex-col">
                 <div id="queen-grid" class="flex-grow grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 p-4 overflow-y-auto no-scrollbar rounded-lg bg-black/30 backdrop-blur-sm"></div>
@@ -42,7 +62,7 @@
         </main>
     </div>
 
-    <div id="simulation-view" class="hidden w-full h-full flex-grow container mx-auto flex flex-col view">
+    <div id="simulation-view" class="hidden w-full h-full flex-grow container mx-auto flex flex-col view z-10 relative">
         <header id="sim-header" class="text-center mb-6">
             <h1 id="episode-header" class="text-5xl md:text-6xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-pink-500" style="text-shadow: 0 0 10px rgba(255,255,255,0.2);"></h1>
             <p id="phase-subheader" class="text-gray-300 mt-2 max-w-3xl mx-auto"></p>
@@ -57,3 +77,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+
