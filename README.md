@@ -4,7 +4,7 @@ Drag Race Philippines Simulator
 
 This is a fan-made simulator celebrating the charisma, uniqueness, nerve, and talent of the queens from Drag Race Philippines. Assemble your dream cast from all seasons and watch the drama unfold as they compete in iconic challenges, stomp the runway, and lip sync for their lives to determine who will be crowned the Philippines' Next Drag Superstar!
 
-This project was created as a fun learning exercise to practice web development skills.
+This project was created as a fun learning exercise to practice Git, AI, and web development skills.
 
 ✨ Features
 
