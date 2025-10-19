@@ -57,7 +57,7 @@ function generateCritique(queen, stat, score) { const level = score > 75 ? 'high
 let gameMode = 'standard', selectedCast = [], currentCast = [], fullCast = [], shuffledChallenges = [], top2 = [], episodeNumber = 1, episodePhase = 'performance', episodeResults = {}, finalScores = [], eliminatedQueen = null;
 const MAX_CAST_SIZE = 15, MIN_CAST_SIZE = 8;
 const bodyContainer = document.getElementById('body-container'), menuView = document.getElementById('menu-view'), selectionView = document.getElementById('selection-view'), simulationView = document.getElementById('simulation-view');
-const standardModeBtn = document.getElementById('standard-mode-btn'), rupaulModeBtn = document.getElementById('rupaul-mode-btn'), queenGrid = document.getElementById('queen-grid'), castList = document.getElementById('cast-list'), castCounter = document.getElementById('cast-counter'), castPlaceholder = document.getElementById('cast-placeholder'), startButton = document.getElementById('start-competition-button'), instructions = document.getElementById('instructions'), episodeHeader = document.getElementById('episode-header'), phaseSubheader = document.getElementById('phase-subheader'), resultsContainer = document.getElementById('results-container'), advanceButton = document.getElementById('advance-button'), restartButton = document.getElementById('restart-button');
+const standardModeBtn = document.getElementById('standard-mode-btn'), mamapaoModeBtn = document.getElementById('mamapao-mode-btn'), queenGrid = document.getElementById('queen-grid'), castList = document.getElementById('cast-list'), castCounter = document.getElementById('cast-counter'), castPlaceholder = document.getElementById('cast-placeholder'), startButton = document.getElementById('start-competition-button'), instructions = document.getElementById('instructions'), episodeHeader = document.getElementById('episode-header'), phaseSubheader = document.getElementById('phase-subheader'), resultsContainer = document.getElementById('results-container'), advanceButton = document.getElementById('advance-button'), restartButton = document.getElementById('restart-button');
 
 // --- CORE & UI LOGIC ---
 function switchView(viewToShow) {
@@ -89,18 +89,36 @@ function runEpisode() {
 function advanceEpisode() {
     switch (episodePhase) {
         case 'performance': runJudgingPhase(); break;
-        case 'placements': runLipSyncPhase(); break;
+        case 'placements': 
+             if (gameMode === 'mamapao') {
+                runTrackRecordPhase();
+            } else {
+                runLipSyncPhase();
+            }
+            break;
         case 'lipsync': runTrackRecordPhase(); break;
         case 'trackRecord': if (currentCast.length <= 4) { episodePhase = 'finale'; runFinalePerformancePhase(); } else { episodeNumber++; runEpisode(); } break;
         case 'finale': runFinaleTop2Phase(); break;
         case 'finaleTop2': runLipsyncForTheCrownPhase(); break;
     }
 }
-function runJudgingPhase() { episodePhase = 'placements'; switchView(simulationView); if (gameMode === 'standard') { episodeResults.placements = assignPlacements(finalScores); displayPlacements(episodeResults.placements); advanceButton.textContent = 'Watch The Lip Sync'; } else { promptForWinner(finalScores); } }
+function runJudgingPhase() { 
+    episodePhase = 'placements'; 
+    switchView(simulationView); 
+    if (gameMode === 'standard') { 
+        episodeResults.placements = assignPlacements(finalScores); 
+        displayPlacements(episodeResults.placements); 
+        advanceButton.textContent = 'Watch The Lip Sync'; 
+    } else { 
+        promptForWinner(finalScores); 
+    } 
+}
 function runLipSyncPhase() {
-    episodePhase = 'lipsync'; switchView(simulationView);
+    episodePhase = 'lipsync'; 
+    switchView(simulationView);
     phaseSubheader.textContent = `Lip Sync For Your Life!`; 
     const bottomQueens = episodeResults.placements.filter(r => r.placement === 'BTM'); 
+    episodeResults.lipSyncSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
     if (bottomQueens.length < 2) { 
         const sortedCastByScore = [...finalScores].sort((a,b) => a.totalScore - b.totalScore);
         eliminatedQueen = bottomQueens.length > 0 ? bottomQueens[0].queen : sortedCastByScore[0].queen;
@@ -111,21 +129,50 @@ function runLipSyncPhase() {
     const q1Score = q1Result.queen.stats.lipsync * 10 + Math.random() * 15; const q2Score = q2Result.queen.stats.lipsync * 10 + Math.random() * 15; 
     const winner = q1Score >= q2Score ? q1Result : q2Result; const loser = q1Score < q2Score ? q1Result : q2Result; 
     eliminatedQueen = loser.queen; 
+    const winnerPlacement = episodeResults.placements.find(p => p.queen.id === winner.queen.id);
+    const loserPlacement = episodeResults.placements.find(p => p.queen.id === loser.queen.id);
+    if(winnerPlacement) winnerPlacement.placement = 'BTM2';
+    if(loserPlacement) loserPlacement.placement = 'ELIM';
+
     handlePostLipSync(winner.queen, loser.queen);
 }
-function handlePostLipSync(winner, loser) { const song = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)]; displayLipSyncResults(winner, loser, song); advanceButton.classList.remove('hidden'); advanceButton.textContent = 'View Track Record'; }
+function handlePostLipSync(winner, loser) { 
+    displayLipSyncResults(winner, loser, episodeResults.lipSyncSong);
+    advanceButton.classList.remove('hidden'); 
+    advanceButton.textContent = 'View Track Record'; 
+}
 function runTrackRecordPhase() {
-    episodePhase = 'trackRecord'; switchView(simulationView);
+    episodePhase = 'trackRecord'; 
+    switchView(simulationView);
     phaseSubheader.textContent = `Season Progress`; 
-    episodeResults.placements.forEach(p => { const queenInFullCast = fullCast.find(q => q.id === p.queen.id); if (queenInFullCast) { let finalPlacement = p.placement; if (finalPlacement === 'BTM') { finalPlacement = p.queen.id === eliminatedQueen.id ? 'ELIM' : 'BTM2'; } queenInFullCast.trackRecord.push(finalPlacement); } }); 
+    
+    // Fill in track records for queens who were not judged (e.g., safe queens in Mama Pao mode)
+    currentCast.forEach(q => {
+        const queenInFullCast = fullCast.find(fq => fq.id === q.id);
+        const alreadyHasPlacement = episodeResults.placements.some(p => p.queen.id === q.id);
+        if (queenInFullCast && !alreadyHasPlacement) {
+             episodeResults.placements.push({ queen: q, placement: 'SAFE' });
+        }
+    });
+
+    episodeResults.placements.forEach(p => { 
+        const queenInFullCast = fullCast.find(q => q.id === p.queen.id); 
+        if (queenInFullCast && queenInFullCast.trackRecord.length < episodeNumber) { 
+            queenInFullCast.trackRecord.push(p.placement); 
+        } 
+    }); 
     const elimQueenInFullCast = fullCast.find(q => q.id === eliminatedQueen.id); 
-    if (elimQueenInFullCast) { if (elimQueenInFullCast.trackRecord.length < episodeNumber) { elimQueenInFullCast.trackRecord.push('ELIM');} elimQueenInFullCast.eliminated = true; } 
+    if (elimQueenInFullCast) { 
+        elimQueenInFullCast.trackRecord[episodeNumber - 1] = 'ELIM';
+        elimQueenInFullCast.eliminated = true; 
+    } 
     currentCast = currentCast.filter(q => q.id !== eliminatedQueen.id); 
     displayTrackRecord(); 
     advanceButton.textContent = currentCast.length <= 4 ? 'Start The Finale!' : 'Next Episode';
+    advanceButton.classList.remove('hidden');
 }
 function promptForWinner(scores) {
-    phaseSubheader.textContent = "Judges' Deliberations: The Tops"; const topQueens = scores.slice(0, 3); let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">The judges were blown away by the top queens.</h3><p class="text-gray-300">Based on their critiques, you must choose a winner.</p></div><div class="space-y-3">`; topQueens.forEach(s => { html += `<button class="secondary-button w-full p-4 rounded-lg text-left" data-winner-id="${s.queen.id}"><p class="font-bold text-lg">${s.queen.name}</p><p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p><p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p></button>`; }); html += `</div>`; resultsContainer.innerHTML = html; resultsContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => handleWinnerSelection(btn.dataset.winnerId, scores))); advanceButton.classList.add('hidden'); 
+    phaseSubheader.textContent = "Mama Pao's Deliberations: The Tops"; const topQueens = scores.slice(0, 3); let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">The judges were blown away by the top queens.</h3><p class="text-gray-300">Based on their critiques, you must choose a winner.</p></div><div class="space-y-3">`; topQueens.forEach(s => { html += `<button class="secondary-button w-full p-4 rounded-lg text-left" data-winner-id="${s.queen.id}"><p class="font-bold text-lg">${s.queen.name}</p><p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p><p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p></button>`; }); html += `</div>`; resultsContainer.innerHTML = html; resultsContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => handleWinnerSelection(btn.dataset.winnerId, scores))); advanceButton.classList.add('hidden'); 
 }
 function handleWinnerSelection(winnerId, scores) { 
     episodeResults.placements = []; 
@@ -133,7 +180,7 @@ function handleWinnerSelection(winnerId, scores) {
     promptForBottoms(scores); 
 }
 function promptForBottoms(scores) {
-    phaseSubheader.textContent = "Judges' Deliberations: The Bottoms"; 
+    phaseSubheader.textContent = "Mama Pao's Deliberations: The Bottoms"; 
     const bottomQueens = scores.slice(-3); 
     let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Unfortunately, three queens failed to impress.</h3><p class="text-gray-300">You must save one from the lip sync.</p></div><div class="space-y-3">`; 
     bottomQueens.forEach(s => { html += `<button class="secondary-button w-full p-4 rounded-lg text-left" data-safe-id="${s.queen.id}"><p class="font-bold text-lg">${s.queen.name}</p><p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p><p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p></button>`; }); 
@@ -142,18 +189,56 @@ function promptForBottoms(scores) {
 }
 function handleBottomSelection(safeId, scores) { 
     scores.slice(-3).forEach(s => { const placement = s.queen.id === safeId ? 'LOW' : 'BTM'; episodeResults.placements.push({ queen: s.queen, placement }); }); 
-    scores.slice(3, -3).forEach(s => episodeResults.placements.push({ queen: s.queen, placement: 'SAFE' })); 
+    episodeResults.lipSyncSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
     promptForLipSyncWinner(); 
+}
+function formatTrackRecordPills(trackRecord) {
+    if (!trackRecord || trackRecord.length === 0) return '<p class="text-xs text-gray-400">No track record yet.</p>';
+    return `<div class="flex flex-wrap gap-1 mt-2">${trackRecord.map(p => `<span class="track-record-pill placement-${p}">${p}</span>`).join('')}</div>`;
 }
 function promptForLipSyncWinner() {
     const bottomQueens = episodeResults.placements.filter(p => p.placement === 'BTM').map(p => finalScores.find(s => s.queen.id === p.queen.id)); 
+    if (bottomQueens.length < 2) {
+        eliminatedQueen = bottomQueens[0]?.queen || finalScores[finalScores.length - 1].queen;
+        const loserPlacement = episodeResults.placements.find(p => p.queen.id === eliminatedQueen.id);
+        if(loserPlacement) loserPlacement.placement = 'ELIM';
+        runTrackRecordPhase();
+        return;
+    }
     const [s1, s2] = bottomQueens; 
-    const song = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)]; 
-    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Two queens stand before me.</h3><p class="text-gray-300">They will lip sync to ${song}. Based on their passion and performance, you decide who stays.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`; 
-    const createButton = (s) => `<button class="secondary-button w-full p-4 rounded-lg" data-winner-id="${s.queen.id}"><p class="text-xl font-bold">${s.queen.name}</p><div class="text-sm mt-2 text-left"><p><span class="font-semibold">Lip Sync Stat:</span> ${s.queen.stats.lipsync}/10</p><p class="mt-2"><span class="font-semibold">Critiques:</span> ${s.critiques.performance}</p></div></button>`; 
+    const song = episodeResults.lipSyncSong;
+    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Two queens stand before me.</h3><p class="text-gray-300">They will lip sync to ${song}. Based on their passion, performance, and track record, you decide who stays.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`; 
+    const createButton = (s) => {
+        const fullQueenData = fullCast.find(q => q.id === s.queen.id);
+        return `<button class="secondary-button w-full p-4 rounded-lg text-left flex flex-col justify-between" data-winner-id="${s.queen.id}">
+                    <div>
+                        <p class="text-xl font-bold">${s.queen.name}</p>
+                        <div class="text-sm mt-2">
+                            <p><span class="font-semibold">Lip Sync Stat:</span> ${s.queen.stats.lipsync}/10</p>
+                            <p class="mt-2"><span class="font-semibold">This Week's Critique:</span> ${s.critiques.performance}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <p class="font-semibold text-sm">Season Track Record:</p>
+                        ${formatTrackRecordPills(fullQueenData.trackRecord)}
+                    </div>
+                </button>`;
+    }
     html += createButton(s1); html += createButton(s2); html += `</div>`; 
     resultsContainer.innerHTML = html; 
-    resultsContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => { const winnerId = btn.dataset.winnerId; const winner = winnerId === s1.queen.id ? s1.queen : s2.queen; const loser = winnerId === s1.queen.id ? s2.queen : s1.queen; eliminatedQueen = loser; handlePostLipSync(winner, loser); })); 
+    resultsContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => { 
+        resultsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+        const winnerId = btn.dataset.winnerId; 
+        const winner = winnerId === s1.queen.id ? s1.queen : s2.queen; 
+        const loser = winnerId === s1.queen.id ? s2.queen : s1.queen; 
+        eliminatedQueen = loser;
+        const winnerPlacement = episodeResults.placements.find(p => p.queen.id === winner.id);
+        const loserPlacement = episodeResults.placements.find(p => p.queen.id === loser.id);
+        if(winnerPlacement) winnerPlacement.placement = 'BTM2';
+        if(loserPlacement) loserPlacement.placement = 'ELIM';
+        runTrackRecordPhase();
+    })); 
+    advanceButton.classList.add('hidden');
 }
 function displayAllCritiques(scores) { 
     const theme = runwayThemes[Math.floor(Math.random() * runwayThemes.length)]; 
@@ -170,7 +255,7 @@ function assignPlacements(results) {
 function displayPlacements(placements) {
     phaseSubheader.textContent = "The Judges have made their decisions..."; 
     let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">'; 
-    placements.sort((a, b) => { const order = { 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM': 4 }; return order[a.placement] - order[b.placement]; }).forEach(({queen, placement}) => { const placementText = placement === 'BTM' ? 'BTM 2' : placement; const winClass = placement === 'WIN' ? 'placement-WIN-card' : ''; const winImgClass = placement === 'WIN' ? 'placement-WIN-img' : ''; html += `<div class="bg-black/50 p-3 rounded-lg text-center ${winClass} transition-all duration-500"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(queen.name.replace(/\s+/g, '\n'))}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 ${winImgClass}"><p class="font-bold text-lg mt-2">${queen.name}</p><p class="font-display text-2xl tracking-widest text-pink-400">${placementText}</p></div>`; }); 
+    placements.sort((a, b) => { const order = { 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM': 4, 'ELIM': 5, 'BTM2': 4 }; return order[a.placement] - order[b.placement]; }).forEach(({queen, placement}) => { const placementText = placement; const winClass = placement === 'WIN' ? 'placement-WIN-card' : ''; const winImgClass = placement === 'WIN' ? 'placement-WIN-img' : ''; html += `<div class="bg-black/50 p-3 rounded-lg text-center ${winClass} transition-all duration-500"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(queen.name.replace(/\s+/g, '\n'))}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 ${winImgClass}"><p class="font-bold text-lg mt-2">${queen.name}</p><p class="font-display text-2xl tracking-widest text-pink-400">${placementText}</p></div>`; }); 
     resultsContainer.innerHTML = `<div class="text-center mb-4"><p class="text-lg italic text-gray-300">After careful deliberation...</p></div>` + html + `</div>`;
 }
 function displayLipSyncResults(winner, loser, song) {
@@ -181,16 +266,56 @@ function displayLipSyncResults(winner, loser, song) {
     let narrative = `Both queens gave it their all, but ${winner.name}'s passion and precision on stage gave her the edge. She truly embodied the spirit of the song.`; 
     resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The bottom two queens must perform ${song}!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(winner.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 placement-WIN-img"><p class="font-bold text-xl mt-2">${winner.name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(loser.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="text-gray-300 italic text-lg">"${narrative}"</p><p class="font-display text-4xl text-green-400 pt-4">Shantay, you stay, ${winner.name}.</p><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
 }
-function calculateTrackRecordScore(queen) { const placementScores = { 'WIN': 5, 'HIGH': 4, 'SAFE': 3, 'LOW': 2, 'BTM2': 1, 'ELIM': 0 }; return queen.trackRecord.reduce((acc, placement) => acc + (placementScores[placement] || 0), 0); }
-function displayTrackRecord() {
-    const placementOrder = { 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM2': 4, 'ELIM': 5 }; 
-    const lastEpisodeIndex = episodeNumber - 1; 
-    const sortedCast = [...fullCast].sort((a, b) => { if (a.eliminated && !b.eliminated) return 1; if (!a.eliminated && b.eliminated) return -1; const placementA = a.trackRecord[lastEpisodeIndex]; const placementB = b.trackRecord[lastEpisodeIndex]; if (!placementA && placementB) return 1; if (placementA && !placementB) return -1; if (!placementA && !placementB) return 0; return placementOrder[placementA] - placementOrder[placementB]; }); 
+function calculateTrackRecordScore(queen) { const placementScores = { 'WINNER': 6, 'RUNNER-UP': 5, 'WIN': 5, 'HIGH': 4, 'SAFE': 3, 'LOW': 2, 'BTM2': 1, 'ELIM': 0 }; return queen.trackRecord.reduce((acc, placement) => acc + (placementScores[placement] || 0), 0); }
+function displayTrackRecord(isFinale = false) {
+    // CRITICAL BUG FIX: The entire sorting logic is rewritten for accuracy.
+    const placementOrder = { 'WINNER': -2, 'RUNNER-UP': -1, 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM2': 4, 'ELIM': 5 };
+    
+    const activeQueens = fullCast.filter(q => !q.eliminated);
+    const eliminatedQueens = fullCast.filter(q => q.eliminated);
+
+    // Sort active queens by their most recent performance
+    activeQueens.sort((a, b) => {
+        const lastEpisodeIndex = a.trackRecord.length - 1;
+        if (lastEpisodeIndex < 0) return 0;
+        const placementA = a.trackRecord[lastEpisodeIndex];
+        const placementB = b.trackRecord[lastEpisodeIndex];
+        return (placementOrder[placementA] ?? 99) - (placementOrder[placementB] ?? 99);
+    });
+
+    // Sort eliminated queens by when they were eliminated (descending)
+    eliminatedQueens.sort((a, b) => b.trackRecord.length - a.trackRecord.length);
+
+    const sortedCast = [...activeQueens, ...eliminatedQueens];
+    
+    let episodesToShow = Math.max(...fullCast.map(q => q.trackRecord.length));
+    if (episodesToShow <= 0 && fullCast.length > 0) episodesToShow = episodeNumber;
+    
     let tableHTML = `<div class="overflow-x-auto"><table class="w-full text-xs md:text-sm track-record-table bg-black/50"><thead><tr><th class="text-left sticky left-0 bg-gray-900/80 z-10">Queen</th>`; 
-    for (let i = 0; i < episodeNumber; i++) { const challengeName = (shuffledChallenges[i]?.name || `Ep ${i+1}`).split(' ').join('<br>'); tableHTML += `<th><div class="flex flex-col items-center"><span>Ep ${i + 1}</span><span class="font-normal text-gray-400 text-xs">${challengeName}</span></div></th>`; } tableHTML += `</tr></thead><tbody>`; 
-    sortedCast.forEach(queen => { tableHTML += `<tr class="${queen.eliminated ? 'opacity-50' : ''}"><td class="text-left font-bold sticky left-0 bg-gray-800/80 z-10">${queen.name}</td>`; for (let i = 0; i < episodeNumber; i++) { const placement = queen.trackRecord[i] || ''; tableHTML += `<td class="placement-${placement}">${placement}</td>`; } tableHTML += `</tr>`; }); 
+    for (let i = 0; i < episodesToShow; i++) { 
+        if(i < shuffledChallenges.length) {
+            const challengeName = (shuffledChallenges[i]?.name || `Ep ${i+1}`).split(' ').join('<br>'); 
+            tableHTML += `<th><div class="flex flex-col items-center"><span>Ep ${i + 1}</span><span class="font-normal text-gray-400 text-xs">${challengeName}</span></div></th>`; 
+        } else {
+             tableHTML += `<th><div class="flex flex-col items-center"><span>Finale</span><span class="font-normal text-gray-400 text-xs">Winner</span></div></th>`;
+        }
+    } 
+    tableHTML += `</tr></thead><tbody>`; 
+    sortedCast.forEach(queen => { 
+        tableHTML += `<tr class="${queen.eliminated && !isFinale ? 'opacity-50' : ''}"><td class="text-left font-bold sticky left-0 bg-gray-800/80 z-10">${queen.name}</td>`; 
+        for (let i = 0; i < episodesToShow; i++) { 
+            const placement = queen.trackRecord[i] || ''; 
+            tableHTML += `<td class="placement-${placement}">${placement}</td>`; 
+        } 
+        tableHTML += `</tr>`; 
+    }); 
     tableHTML += `</tbody></table></div>`; 
-    resultsContainer.innerHTML = tableHTML;
+    
+    if (isFinale) {
+        resultsContainer.innerHTML += tableHTML;
+    } else {
+        resultsContainer.innerHTML = tableHTML;
+    }
 }
 function runFinalePerformancePhase() {
     episodePhase = 'finale'; 
@@ -244,7 +369,20 @@ function promptForWinnerCrown(q1, q2, score1, score2){
     advanceButton.classList.add('hidden');
 }
 function displayWinner(winner, runnerUp) { 
-    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-2xl mx-auto"><p class="text-2xl font-display tracking-widest">Ladies, the decision is final...</p><p class="text-3xl font-display tracking-widest">The next Drag Race Philippines Superstar is...</p><div class="py-8"><p class="text-7xl md:text-8xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse">${winner.name}</p></div><p class="text-3xl font-display tracking-widest">Condragulations, you're a winner, baby!</p><p class="text-xl pt-4">And to our runner-up, ${runnerUp.name}, you are and will always be a star. Now, prance, my queen!</p></div>`; 
+    // Update track records for finalists
+    const winnerInCast = fullCast.find(q => q.id === winner.id);
+    const runnerUpInCast = fullCast.find(q => q.id === runnerUp.id);
+    const otherFinalists = fullCast.filter(q => q.trackRecord.length === episodeNumber && q.id !== winner.id && q.id !== runnerUp.id);
+    
+    winnerInCast.trackRecord.push('WINNER');
+    runnerUpInCast.trackRecord.push('RUNNER-UP');
+    otherFinalists.forEach(q => q.trackRecord.push('ELIM'));
+
+    let winnerHtml = `<div class="text-center space-y-4 max-w-2xl mx-auto"><p class="text-2xl font-display tracking-widest">Ladies, the decision is final...</p><p class="text-3xl font-display tracking-widest">The next Drag Race Philippines Superstar is...</p><div class="py-8"><p class="text-7xl md:text-8xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse">${winner.name}</p></div><p class="text-3xl font-display tracking-widest">Condragulations, you're a winner, baby!</p><p class="text-xl pt-4">And to our runner-up, ${runnerUp.name}, you are and will always be a star. Now, prance, my queen!</p></div> <hr class="my-8 border-gray-600">`;
+    
+    resultsContainer.innerHTML = winnerHtml;
+    displayTrackRecord(true); // Show final track record
+    
     advanceButton.classList.add('hidden'); 
     restartButton.classList.remove('hidden'); 
 }
@@ -268,7 +406,7 @@ function toggleQueenSelection(queen) {
 // --- INITIALIZATION ---
 window.addEventListener('load', () => {
     standardModeBtn.addEventListener('click', () => selectMode('standard'));
-    rupaulModeBtn.addEventListener('click', () => selectMode('rupaul'));
+    mamapaoModeBtn.addEventListener('click', () => selectMode('mamapao'));
     
     const sortedQueens = queens.sort((a,b) => (a.season - b.season) || a.name.localeCompare(b.name));
     let currentSeason = 0;
@@ -295,3 +433,4 @@ window.addEventListener('load', () => {
     updateSelectionUI();
     switchView(menuView);
 });
+
