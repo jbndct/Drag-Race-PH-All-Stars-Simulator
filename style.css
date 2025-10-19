@@ -93,10 +93,10 @@ body {
     text-align: center; 
     border: 1px solid #374151; 
 }
-.placement-WIN { background-color: #a942a9; color: white; font-weight: bold; }
-.placement-HIGH { background-color: #3b82f6; }
+.placement-WIN { background-color: #3017bf; color: white; font-weight: bold; }
+.placement-HIGH { background-color: #5685d0; }
 .placement-SAFE { background-color: #4b5563; }
-.placement-LOW { background-color: #ca8a04; }
+.placement-LOW { background-color: #bc5a8d; }
 .placement-BTM2 { background-color: #d97706; }
 .placement-ELIM { background-color: #be123c; color: white; font-weight: bold; }
 .placement-WINNER { background: linear-gradient(45deg, #fde047, #fbbf24); color: black; font-weight: bold; }
@@ -111,4 +111,3 @@ body {
     border-radius: 9999px;
     color: white;
 }
-
