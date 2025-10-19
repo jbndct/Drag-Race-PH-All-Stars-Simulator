@@ -40,16 +40,67 @@ const queens = [
     { id: 'versex', name: 'Versex', season: 3, stats: { runway: 7, comedy: 6, acting: 6, dance: 7, design: 7, lipsync: 5 } },
 ];
 const challenges = [ { name: "Snatch Game", primaryStat: 'comedy', intro: "The queens must impersonate celebrities in the legendary Snatch Game!" }, { name: "The Rusical", primaryStat: 'dance', intro: "It's time for the Rusical! The queens must sing, dance, and act their hearts out." }, { name: "Girl Groups", primaryStat: 'dance', intro: "Pop star fantasies come alive as the queens form two rival girl groups." }, { name: "Acting Challenge", primaryStat: 'acting', intro: "The queens star in a new teleserye, but who will steal the scene?" }, { name: "Improv", primaryStat: 'comedy', intro: "Queens must think on their feet in a hilarious improv challenge." }, { name: "Sewing", primaryStat: 'design', intro: "Using unconventional materials, the queens must create a look from scratch." }, { name: "The Ball", primaryStat: 'design', intro: "The queens must serve three distinct looks, including one they make themselves, in the legendary Ball." }, { name: "Makeover", primaryStat: 'design', intro: "The queens give drag makeovers to some very special guests!" }, { name: "Talent Show", primaryStat: 'acting', intro: "In the grand premiere, the queens must showcase their unique talents." }, { name: "Roast", primaryStat: 'comedy', intro: "The library is open! The queens must roast the judges and each other." }, ];
-const runwayThemes = ["Filipiniana Extravaganza", "Pearls & Perlas", "Mythical Creatures", "Jeepney Realness", "Divas of the Decades", "Horror-scope", "Terno-dactyl", "Flower Power"];
-const lipsyncSongs = ["'Sirena' by Gloc-9", "'Tala' by Sarah Geronimo", "'Kilometro' by Sarah Geronimo", "'Nosi Balasi' by Sampaguita", "'Shantidope' by Shanti Dope", "'Bongga Ka 'Day' by Hotdog", "'Rampa' by Vice Ganda"];
+const runwayThemes = ["Filipiniana Extravaganza", "Pearls & Perlas", "Mythical Creatures", "Jeepney Realness", "Divas of the Decades", "Horror-scope", "Terno-dactyl", "Flower Power", "Miss Universe Couture", "Intergalactic Drag", "Aswang Chic"];
 
-// --- NARRATIVE ENGINE ---
+// COSMETIC CHANGE: Massively expanded and updated OPM lipsync song list
+const lipsyncSongs = [
+    "'Sirena' by Gloc-9",
+    "'Upuan' by Gloc-9", 
+    "'Tala' by Sarah Geronimo", 
+    "'Kilometro' by Sarah Geronimo", 
+    "'Nosi Balasi' by Sampaguita", 
+    "'Rampa' by Vice Ganda", 
+    "'Amakabogera' by Maymay Entrata",
+    "'Halik' by Aegis",
+    "'Basang Basa sa Ulan' by Aegis",
+    "'Luha' by Aegis",
+    "'Gento' by SB19",
+    "'Spageti Song' by Sexbomb Girls",
+    "'Bakit Papa?' by Sexbomb Girls",
+    "'Dadalhin' by Regine Velasquez",
+    "'On The Wings of Love' by Regine Velasquez",
+    "'Sundo' by Imago",
+    "'Torete' by Moonstar88",
+    "'Ikot-Ikot' by Sarah Geronimo",
+    "'Paubaya' by Moira Dela Torre",
+    "'Araw-Araw' by Ben&Ben",
+    "'Karera' by BINI",
+    "'Your Love' by Alamid",
+    "'Ako'y Maghihintay' by Jolina Magdangal",
+    "'Chinito' by Yeng Constantino",
+    "'Pop Off Ate!' from DRPH S1",
+    "'BOOGSH!' from DRPH S2",
+    "'Bongga Ka 'Day' by Hotdog",
+    "'Please, Please, Please' by Sabrina Carpenter"
+];
+
+// COSMETIC CHANGE: More critique options to reduce repetition
 const critiques = {
-    comedy: { high: ["'s comedic timing was impeccable, leaving the judges in stitches.", "'s celebrity impersonation was spot-on and hilariously funny.", "delivered a knockout performance, with jokes that consistently landed."], mid: ["had some funny moments, but the performance was a bit inconsistent.", "took a safe approach that didn't quite stand out.", "'s character was interesting, but needed more punchlines."], low: ["'s jokes failed to land, resulting in some awkward silences.", "struggled to find the humor in their character.", "'s performance felt under-rehearsed and missed the mark."] },
-    dance: { high: ["set the stage on fire with their sharp choreography and star quality.", "was a true standout, hitting every beat with precision and energy.", "commanded the stage and proved they are a true dancing diva."], mid: ["kept up with the choreography but didn't have a standout moment.", "was solid in the group, but got a little lost in the background.", "showed potential but needed a bit more polish in their moves."], low: ["was visibly struggling with the choreography.", "seemed to be a step behind the other queens.", "lacked the energy the performance needed, and it showed."] },
-    acting: { high: ["delivered a powerful and believable performance, stealing every scene they were in.", "showcased incredible range and made a memorable character choice.", "was a natural, bringing humor and heart to their role."], mid: ["had their moments but sometimes faded into the background.", "made safe choices that didn't allow their full potential to shine.", "was professional but didn't take enough risks to stand out."], low: ["'s performance felt flat and one-note.", "seemed to forget their lines and struggled with their character.", "overacted and their performance felt more like a caricature."] },
-    design: { high: ["constructed a breathtaking garment that looked like it came from a professional designer.", "'s look was creative, well-executed, and told a clear story.", "showed incredible skill, transforming unconventional materials into a high-fashion look."], mid: ["'s garment was a good idea but the execution could have been cleaner.", "created a solid look, but it wasn't a showstopper.", "played it safe with a simple silhouette that was well-made but unexciting."], low: ["'s garment looked unfinished, with messy hemlines and a confusing silhouette.", "struggled with construction, and the final garment was not flattering.", "had a concept that was better in theory than in execution."] },
-    runway: { high: ["stomped the runway with confidence, selling every inch of their breathtaking look.", "served a look that was pure high fashion and perfectly on theme.", "presented a creative and polished look that left the judges gagged."], mid: ["'s runway was nice, but it didn't leave a lasting impression.", "had a good look, but it felt like something we've seen before.", "looked polished, but the look was a little safe for this stage of the competition."], low: ["'s runway presentation was underwhelming and the garment was ill-fitting.", "missed the mark on the theme, presenting a confusing look.", "had an interesting idea for the runway, but the execution was sloppy."] }
+    comedy: { 
+        high: ["'s comedic timing was impeccable, leaving the judges in stitches.", "'s celebrity impersonation was spot-on and hilariously funny.", "delivered a knockout performance, with jokes that consistently landed.", "was a comedic genius, their performance was pure gold."], 
+        mid: ["had some funny moments, but the performance was a bit inconsistent.", "took a safe approach that didn't quite stand out.", "'s character was interesting, but needed more punchlines.", "got a few chuckles, but didn't fully commit to the character."], 
+        low: ["'s jokes failed to land, resulting in some awkward silences.", "struggled to find the humor in their character.", "'s performance felt under-rehearsed and missed the mark.", "was a comedy catastrophe, it was hard to watch."] 
+    },
+    dance: { 
+        high: ["set the stage on fire with their sharp choreography and star quality.", "was a true standout, hitting every beat with precision and energy.", "commanded the stage and proved they are a true dancing diva.", "moved like a seasoned professional, a joy to watch."], 
+        mid: ["kept up with the choreography but didn't have a standout moment.", "was solid in the group, but got a little lost in the background.", "showed potential but needed a bit more polish in their moves.", "did the moves correctly, but lacked a bit of passion."], 
+        low: ["was visibly struggling with the choreography.", "seemed to be a step behind the other queens.", "lacked the energy the performance needed, and it showed.", "looked stiff and uncomfortable on the main stage."] 
+    },
+    acting: { 
+        high: ["delivered a powerful and believable performance, stealing every scene they were in.", "showcased incredible range and made a memorable character choice.", "was a natural, bringing humor and heart to their role.", "deserves an award for that performance, truly captivating."], 
+        mid: ["had their moments but sometimes faded into the background.", "made safe choices that didn't allow their full potential to shine.", "was professional but didn't take enough risks to stand out.", "was believable, but the performance was forgettable."], 
+        low: ["'s performance felt flat and one-note.", "seemed to forget their lines and struggled with their character.", "overacted and their performance felt more like a caricature.", "gave a wooden performance that brought the whole scene down."] 
+    },
+    design: { 
+        high: ["constructed a breathtaking garment that looked like it came from a professional designer.", "'s look was creative, well-executed, and told a clear story.", "showed incredible skill, transforming unconventional materials into a high-fashion look.", "created a masterpiece, a true work of art."], 
+        mid: ["'s garment was a good idea but the execution could have been cleaner.", "created a solid look, but it wasn't a showstopper.", "played it safe with a simple silhouette that was well-made but unexciting.", "the look is fine, but it's not fashion."], 
+        low: ["'s garment looked unfinished, with messy hemlines and a confusing silhouette.", "struggled with construction, and the final garment was not flattering.", "had a concept that was better in theory than in execution.", "it's a piece of fabric... with other pieces of fabric glued to it."] 
+    },
+    runway: { 
+        high: ["stomped the runway with confidence, selling every inch of their breathtaking look.", "served a look that was pure high fashion and perfectly on theme.", "presented a creative and polished look that left the judges gagged.", "owned the runway tonight, a true supermodel."], 
+        mid: ["'s runway was nice, but it didn't leave a lasting impression.", "had a good look, but it felt like something we've seen before.", "looked polished, but the look was a little safe for this stage of the competition.", "the look is beautiful, but is it drag?"], 
+        low: ["'s runway presentation was underwhelming and the garment was ill-fitting.", "missed the mark on the theme, presenting a confusing look.", "had an interesting idea for the runway, but the execution was sloppy.", "it's a no from us. What were they thinking?"] 
+    }
 };
 function generateCritique(queen, stat, score) { const level = score > 75 ? 'high' : score > 40 ? 'mid' : 'low'; const options = critiques[stat][level]; const critiqueText = options[Math.floor(Math.random() * options.length)]; const separator = critiqueText.startsWith("'") ? "" : " "; return queen.name + separator + critiqueText; }
 
@@ -72,7 +123,7 @@ function switchView(viewToShow) {
     bodyContainer.style.backgroundImage = bg;
 }
 function selectMode(mode) { gameMode = mode; switchView(selectionView); }
-function startCompetition() { fullCast = selectedCast.map(q => ({ ...q, trackRecord: [] })); currentCast = [...fullCast]; episodeNumber = 1; shuffledChallenges = [...challenges].sort(() => 0.5 - Math.random()); runEpisode(); }
+function startCompetition() { fullCast = selectedCast.map(q => ({ ...q, trackRecord: [], eliminated: false })); currentCast = [...fullCast]; episodeNumber = 1; shuffledChallenges = [...challenges].sort(() => 0.5 - Math.random()); runEpisode(); }
 function runEpisode() {
     episodePhase = 'performance';
     switchView(simulationView);
@@ -146,7 +197,6 @@ function runTrackRecordPhase() {
     switchView(simulationView);
     phaseSubheader.textContent = `Season Progress`; 
     
-    // Fill in track records for queens who were not judged (e.g., safe queens in Mama Pao mode)
     currentCast.forEach(q => {
         const queenInFullCast = fullCast.find(fq => fq.id === q.id);
         const alreadyHasPlacement = episodeResults.placements.some(p => p.queen.id === q.id);
@@ -166,13 +216,22 @@ function runTrackRecordPhase() {
         elimQueenInFullCast.trackRecord[episodeNumber - 1] = 'ELIM';
         elimQueenInFullCast.eliminated = true; 
     } 
-    currentCast = currentCast.filter(q => q.id !== eliminatedQueen.id); 
+    currentCast = fullCast.filter(q => !q.eliminated);
     displayTrackRecord(); 
     advanceButton.textContent = currentCast.length <= 4 ? 'Start The Finale!' : 'Next Episode';
     advanceButton.classList.remove('hidden');
 }
 function promptForWinner(scores) {
-    phaseSubheader.textContent = "Mama Pao's Deliberations: The Tops"; const topQueens = scores.slice(0, 3); let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">The judges were blown away by the top queens.</h3><p class="text-gray-300">Based on their critiques, you must choose a winner.</p></div><div class="space-y-3">`; topQueens.forEach(s => { html += `<button class="secondary-button w-full p-4 rounded-lg text-left" data-winner-id="${s.queen.id}"><p class="font-bold text-lg">${s.queen.name}</p><p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p><p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p></button>`; }); html += `</div>`; resultsContainer.innerHTML = html; resultsContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => handleWinnerSelection(btn.dataset.winnerId, scores))); advanceButton.classList.add('hidden'); 
+    // COSMETIC CHANGE: More varied narrative text
+    const deliberationTexts = ["The judges were blown away by the top queens.", "It was a tough decision, but these queens rose to the top.", "These queens absolutely slayed the challenge."];
+    phaseSubheader.textContent = "Mama Pao's Deliberations: The Tops"; 
+    const topQueens = scores.slice(0, 3); 
+    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">${deliberationTexts[Math.floor(Math.random() * deliberationTexts.length)]}</h3><p class="text-gray-300">Based on their critiques, you must choose a winner.</p></div><div class="space-y-3">`; 
+    topQueens.forEach(s => { html += `<button class="secondary-button w-full p-4 rounded-lg text-left" data-winner-id="${s.queen.id}"><p class="font-bold text-lg">${s.queen.name}</p><p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p><p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p></button>`; }); 
+    html += `</div>`; 
+    resultsContainer.innerHTML = html; 
+    resultsContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => handleWinnerSelection(btn.dataset.winnerId, scores))); 
+    advanceButton.classList.add('hidden'); 
 }
 function handleWinnerSelection(winnerId, scores) { 
     episodeResults.placements = []; 
@@ -180,11 +239,14 @@ function handleWinnerSelection(winnerId, scores) {
     promptForBottoms(scores); 
 }
 function promptForBottoms(scores) {
+    // COSMETIC CHANGE: More varied narrative text
+    const deliberationTexts = ["Unfortunately, three queens failed to impress.", "These queens found themselves at the bottom of the pack.", "For these three queens, the critiques were harsh."];
     phaseSubheader.textContent = "Mama Pao's Deliberations: The Bottoms"; 
     const bottomQueens = scores.slice(-3); 
-    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Unfortunately, three queens failed to impress.</h3><p class="text-gray-300">You must save one from the lip sync.</p></div><div class="space-y-3">`; 
+    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">${deliberationTexts[Math.floor(Math.random() * deliberationTexts.length)]}</h3><p class="text-gray-300">You must save one from the lip sync.</p></div><div class="space-y-3">`; 
     bottomQueens.forEach(s => { html += `<button class="secondary-button w-full p-4 rounded-lg text-left" data-safe-id="${s.queen.id}"><p class="font-bold text-lg">${s.queen.name}</p><p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p><p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p></button>`; }); 
-    html += `</div>`; resultsContainer.innerHTML = html; 
+    html += `</div>`; 
+    resultsContainer.innerHTML = html; 
     resultsContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => handleBottomSelection(btn.dataset.safeId, scores))); 
 }
 function handleBottomSelection(safeId, scores) { 
@@ -253,40 +315,37 @@ function assignPlacements(results) {
     return results.map((r, i) => { let placement; if (i === 0) placement = 'WIN'; else if (len > 5 && i <= 2) placement = 'HIGH'; else if (i >= len - 2) placement = 'BTM'; else if (len > 4 && i === len - 3) placement = 'LOW'; else placement = 'SAFE'; return { queen: r.queen, placement: placement }; }); 
 }
 function displayPlacements(placements) {
+    const deliberationTexts = ["After careful deliberation...", "The judges have made some tough decisions...", "The panel has spoken..."];
     phaseSubheader.textContent = "The Judges have made their decisions..."; 
     let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">'; 
     placements.sort((a, b) => { const order = { 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM': 4, 'ELIM': 5, 'BTM2': 4 }; return order[a.placement] - order[b.placement]; }).forEach(({queen, placement}) => { const placementText = placement; const winClass = placement === 'WIN' ? 'placement-WIN-card' : ''; const winImgClass = placement === 'WIN' ? 'placement-WIN-img' : ''; html += `<div class="bg-black/50 p-3 rounded-lg text-center ${winClass} transition-all duration-500"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(queen.name.replace(/\s+/g, '\n'))}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 ${winImgClass}"><p class="font-bold text-lg mt-2">${queen.name}</p><p class="font-display text-2xl tracking-widest text-pink-400">${placementText}</p></div>`; }); 
-    resultsContainer.innerHTML = `<div class="text-center mb-4"><p class="text-lg italic text-gray-300">After careful deliberation...</p></div>` + html + `</div>`;
+    resultsContainer.innerHTML = `<div class="text-center mb-4"><p class="text-lg italic text-gray-300">${deliberationTexts[Math.floor(Math.random() * deliberationTexts.length)]}</p></div>` + html + `</div>`;
 }
 function displayLipSyncResults(winner, loser, song) {
     if (!winner) { 
         resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">A FATEFUL DECISION</h2><p class="text-lg">Due to the results of the challenge, there is no lip sync this week.</p><p class="text-gray-300 italic text-lg">The judges have decided that one queen's time has come to an end.</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(loser.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
         return; 
     } 
-    let narrative = `Both queens gave it their all, but ${winner.name}'s passion and precision on stage gave her the edge. She truly embodied the spirit of the song.`; 
-    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The bottom two queens must perform ${song}!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(winner.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 placement-WIN-img"><p class="font-bold text-xl mt-2">${winner.name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(loser.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="text-gray-300 italic text-lg">"${narrative}"</p><p class="font-display text-4xl text-green-400 pt-4">Shantay, you stay, ${winner.name}.</p><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
+    const narratives = [
+        `Both queens gave it their all, but ${winner.name}'s passion and precision on stage gave her the edge. She truly embodied the spirit of the song.`,
+        `It was a lip sync for the ages! In the end, ${winner.name}'s star quality was simply undeniable.`,
+        `${loser.name} put up a valiant fight, but ${winner.name} channeled the song's energy and left it all on the stage.`
+    ];
+    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The bottom two queens must perform ${song}!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(winner.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 placement-WIN-img"><p class="font-bold text-xl mt-2">${winner.name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(loser.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="text-gray-300 italic text-lg">"${narratives[Math.floor(Math.random() * narratives.length)]}"</p><p class="font-display text-4xl text-green-400 pt-4">Shantay, you stay, ${winner.name}.</p><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
 }
 function calculateTrackRecordScore(queen) { const placementScores = { 'WINNER': 6, 'RUNNER-UP': 5, 'WIN': 5, 'HIGH': 4, 'SAFE': 3, 'LOW': 2, 'BTM2': 1, 'ELIM': 0 }; return queen.trackRecord.reduce((acc, placement) => acc + (placementScores[placement] || 0), 0); }
 function displayTrackRecord(isFinale = false) {
-    // CRITICAL BUG FIX: The entire sorting logic is rewritten for accuracy.
     const placementOrder = { 'WINNER': -2, 'RUNNER-UP': -1, 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM2': 4, 'ELIM': 5 };
-    
-    const activeQueens = fullCast.filter(q => !q.eliminated);
-    const eliminatedQueens = fullCast.filter(q => q.eliminated);
-
-    // Sort active queens by their most recent performance
-    activeQueens.sort((a, b) => {
+    const sortedCast = [...fullCast].sort((a, b) => {
+        if (a.eliminated && !b.eliminated) return 1;
+        if (!a.eliminated && b.eliminated) return -1;
+        if (a.eliminated && b.eliminated) { return b.trackRecord.length - a.trackRecord.length; }
         const lastEpisodeIndex = a.trackRecord.length - 1;
         if (lastEpisodeIndex < 0) return 0;
         const placementA = a.trackRecord[lastEpisodeIndex];
         const placementB = b.trackRecord[lastEpisodeIndex];
         return (placementOrder[placementA] ?? 99) - (placementOrder[placementB] ?? 99);
     });
-
-    // Sort eliminated queens by when they were eliminated (descending)
-    eliminatedQueens.sort((a, b) => b.trackRecord.length - a.trackRecord.length);
-
-    const sortedCast = [...activeQueens, ...eliminatedQueens];
     
     let episodesToShow = Math.max(...fullCast.map(q => q.trackRecord.length));
     if (episodesToShow <= 0 && fullCast.length > 0) episodesToShow = episodeNumber;
