@@ -1,0 +1,101 @@
+:root {
+    --font-body: 'Inter', sans-serif;
+    --font-display: 'Bebas Neue', cursive;
+    /* Curated, high-quality, thematic stock images */
+    --bg-image-selection: url('https://images.unsplash.com/photo-1542044896530-053994144566?q=80&w=2070&auto=format&fit=crop'); /* Pink Velvet Curtain */
+    --bg-image-challenge: url('https://images.unsplash.com/photo-1562071729-6232b5f14445?q=80&w=1974&auto=format&fit=crop'); /* Backstage Mirrors */
+    --bg-image-runway: url('https://images.unsplash.com/photo-1608223689218-c073a693246a?q=80&w=1962&auto=format&fit=crop'); /* Glowing Runway */
+    --bg-image-lipsync: url('https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=2070&auto=format&fit=crop'); /* Spotlight on Stage */
+    --bg-image-finale: url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1974&auto=format&fit=crop'); /* Gold Confetti */
+}
+
+body {
+    font-family: var(--font-body);
+    color: #F3F4F6;
+    transition: background-image 0.8s ease-in-out;
+}
+
+.bg-dynamic {
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    /* JavaScript-powered enhancement: Animated gradient behind the image */
+    background-blend-mode: overlay;
+    animation: shimmer 20s infinite alternate;
+    transition: background-image 0.8s ease-in-out;
+}
+
+@keyframes shimmer {
+    0% { background-color: #4c1d95; } /* Deep Violet */
+    100% { background-color: #9d174d; } /* Deep Pink */
+}
+
+.backdrop-blur-sm { 
+    backdrop-filter: blur(4px); 
+    -webkit-backdrop-filter: blur(4px); 
+}
+
+.font-display { font-family: var(--font-display); }
+
+.main-button {
+    background: linear-gradient(to right, #D946EF, #EC4899);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid transparent;
+}
+
+.main-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.7);
+}
+
+.secondary-button {
+    background-color: rgba(31, 41, 55, 0.7);
+    border: 2px solid #4B5563;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.secondary-button:hover, .secondary-button.selected {
+    background-color: rgba(217, 70, 239, 0.6);
+    border-color: #d946ef;
+    transform: scale(1.02);
+}
+
+.queen-card { transition: all 0.3s ease-in-out; }
+.queen-card:hover { transform: scale(1.08); box-shadow: 0 0 20px rgba(236, 72, 153, 0.6); }
+.queen-card.selected { transform: scale(1.08); box-shadow: 0 0 25px rgba(251, 191, 36, 1); border-color: #fbbf24; }
+
+.btn-primary { background: linear-gradient(to right, #D946EF, #EC4899); transition: transform 0.2s, box-shadow 0.2s, background 0.2s; }
+.btn-primary:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 0 15px rgba(236, 72, 153, 0.7); }
+.btn-primary:disabled { background: #4B5563; cursor: not-allowed; transform: scale(1); box-shadow: none; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.placement-WIN-img { animation: pulse-gold-img 2s infinite; }
+@keyframes pulse-gold-img { 
+    0%, 100% { box-shadow: 0 0 20px #fbbf24; } 
+    50% { box-shadow: 0 0 40px #fde047; } 
+}
+.placement-WIN-card { border: 2px solid #fbbf24; }
+
+.placement-ELIM-img { filter: grayscale(1); opacity: 0.6; }
+
+.critique-card { border-left-width: 4px; }
+.critique-good { border-left-color: #3b82f6; }
+.critique-safe { border-left-color: #6b7280; }
+.critique-bad { border-left-color: #d97706; }
+
+.view { transition: opacity 0.5s ease-in-out, visibility 0.5s; }
+.view.hidden { visibility: hidden; }
+
+.track-record-table th, .track-record-table td { 
+    padding: 0.5rem; 
+    text-align: center; 
+    border: 1px solid #374151; 
+}
+.placement-WIN { background-color: #a942a9; color: white; font-weight: bold; }
+.placement-HIGH { background-color: #3b82f6; }
+.placement-SAFE { background-color: #4b5563; }
+.placement-LOW { background-color: #ca8a04; }
+.placement-BTM2 { background-color: #d97706; }
+.placement-ELIM { background-color: #be123c; color: white; font-weight: bold; }
