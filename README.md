@@ -1,4 +1,4 @@
-Drag Race Philippines All Stars Simulator
+Drag Race Philippines: All Stars Simulator
 
 🏁 Mabu-heyyyy, Welcome to the Werk Room! 🏁
 
