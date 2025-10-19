@@ -105,7 +105,9 @@ const critiques = {
 function generateCritique(queen, stat, score) { const level = score > 75 ? 'high' : score > 40 ? 'mid' : 'low'; const options = critiques[stat][level]; const critiqueText = options[Math.floor(Math.random() * options.length)]; const separator = critiqueText.startsWith("'") ? "" : " "; return queen.name + separator + critiqueText; }
 
 // --- STATE & DOM ELEMENTS ---
-let gameMode = 'standard', selectedCast = [], currentCast = [], fullCast = [], shuffledChallenges = [], top2 = [], episodeNumber = 1, episodePhase = 'performance', episodeResults = {}, finalScores = [], eliminatedQueen = null;
+let gameMode = 'standard', selectedCast = [], currentCast = [], fullCast = [], shuffledChallenges = [], top2 = [], episodeNumber = 1, episodePhase = 'performance', episodeResults = {}, finalScores = [], eliminatedQueens = [];
+// --- NEW: State for Double Shantay/Sashay ---
+let doubleShantayCount = 0, doubleSashayCount = 0;
 const MAX_CAST_SIZE = 15, MIN_CAST_SIZE = 8;
 const bodyContainer = document.getElementById('body-container'), menuView = document.getElementById('menu-view'), selectionView = document.getElementById('selection-view'), simulationView = document.getElementById('simulation-view');
 const standardModeBtn = document.getElementById('standard-mode-btn'), mamapaoModeBtn = document.getElementById('mamapao-mode-btn'), queenGrid = document.getElementById('queen-grid'), castList = document.getElementById('cast-list'), castCounter = document.getElementById('cast-counter'), castPlaceholder = document.getElementById('cast-placeholder'), startButton = document.getElementById('start-competition-button'), instructions = document.getElementById('instructions'), episodeHeader = document.getElementById('episode-header'), phaseSubheader = document.getElementById('phase-subheader'), resultsContainer = document.getElementById('results-container'), advanceButton = document.getElementById('advance-button'), restartButton = document.getElementById('restart-button');
@@ -123,7 +125,16 @@ function switchView(viewToShow) {
     bodyContainer.style.backgroundImage = bg;
 }
 function selectMode(mode) { gameMode = mode; switchView(selectionView); }
-function startCompetition() { fullCast = selectedCast.map(q => ({ ...q, trackRecord: [], eliminated: false, epElim: -1 })); currentCast = [...fullCast]; episodeNumber = 1; shuffledChallenges = [...challenges].sort(() => 0.5 - Math.random()); runEpisode(); }
+function startCompetition() { 
+    fullCast = selectedCast.map(q => ({ ...q, trackRecord: [], eliminated: false, epElim: -1 })); 
+    currentCast = [...fullCast]; 
+    episodeNumber = 1; 
+    shuffledChallenges = [...challenges].sort(() => 0.5 - Math.random()); 
+    // --- NEW: Reset counters for each season ---
+    doubleShantayCount = 0;
+    doubleSashayCount = 0;
+    runEpisode(); 
+}
 function runEpisode() {
     episodePhase = 'performance';
     switchView(simulationView);
@@ -173,45 +184,76 @@ function runJudgingPhase() {
         promptForWinner(finalScores); 
     } 
 }
+// --- NEW: Overhauled Lip Sync Logic for Standard Mode ---
 function runLipSyncPhase() {
     episodePhase = 'lipsync'; 
     switchView(simulationView);
     phaseSubheader.textContent = `Lip Sync For Your Life!`; 
+    
+    eliminatedQueens = []; // Reset eliminations for this episode
     const bottomQueens = episodeResults.placements.filter(r => r.placement === 'BTM'); 
     episodeResults.lipSyncSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
+
     if (bottomQueens.length < 2) { 
+        // Not enough queens for a lip sync, find the lowest score to eliminate
         const sortedCastByScore = [...finalScores].sort((a,b) => a.totalScore - b.totalScore);
-        eliminatedQueen = bottomQueens.length > 0 ? bottomQueens[0].queen : sortedCastByScore[0].queen;
-        const loserPlacement = episodeResults.placements.find(p => p.queen.id === eliminatedQueen.id);
+        eliminatedQueens.push(bottomQueens.length > 0 ? bottomQueens[0].queen : sortedCastByScore[0].queen);
+        const loserPlacement = episodeResults.placements.find(p => p.queen.id === eliminatedQueens[0].id);
         if(loserPlacement) loserPlacement.placement = 'ELIM';
-        handlePostLipSync(null, eliminatedQueen); 
+        handlePostLipSync(); 
         return; 
     }
-    const [q1Result, q2Result] = bottomQueens.map(p => finalScores.find(s => s.queen.id === p.queen.id));
-    const q1Score = q1Result.queen.stats.lipsync * 10 + Math.random() * 15; const q2Score = q2Result.queen.stats.lipsync * 10 + Math.random() * 15; 
-    const winner = q1Score >= q2Score ? q1Result : q2Result; const loser = q1Score < q2Score ? q1Result : q2Result; 
-    eliminatedQueen = loser.queen; 
-    const winnerPlacement = episodeResults.placements.find(p => p.queen.id === winner.queen.id);
-    const loserPlacement = episodeResults.placements.find(p => p.queen.id === loser.queen.id);
-    if(winnerPlacement) winnerPlacement.placement = 'BTM2';
-    if(loserPlacement) loserPlacement.placement = 'ELIM';
 
-    handlePostLipSync(winner.queen, loser.queen);
+    const [q1Result, q2Result] = bottomQueens.map(p => finalScores.find(s => s.queen.id === p.queen.id));
+    const q1Score = q1Result.queen.stats.lipsync * 10 + Math.random() * 15; 
+    const q2Score = q2Result.queen.stats.lipsync * 10 + Math.random() * 15; 
+    
+    // Double Sashay Check (rarest)
+    if (doubleSashayCount < 1 && q1Score < 25 && q2Score < 25 && Math.random() < 0.1) {
+        eliminatedQueens = [q1Result.queen, q2Result.queen];
+        doubleSashayCount++;
+        episodeResults.placements.find(p => p.queen.id === q1Result.queen.id).placement = 'ELIM';
+        episodeResults.placements.find(p => p.queen.id === q2Result.queen.id).placement = 'ELIM';
+        handlePostLipSync();
+        return;
+    }
+
+    // Double Shantay Check
+    const isFrontRunner1 = calculateTrackRecordScore(q1Result.queen) > (episodeNumber * 2.8);
+    const isFrontRunner2 = calculateTrackRecordScore(q2Result.queen) > (episodeNumber * 2.8);
+    const greatPerformance = q1Score > 80 && q2Score > 80;
+    if (doubleShantayCount < 2 && (greatPerformance || (isFrontRunner1 && isFrontRunner2)) && Math.random() < 0.2) {
+        // No one is eliminated
+        doubleShantayCount++;
+        episodeResults.placements.find(p => p.queen.id === q1Result.queen.id).placement = 'BTM2';
+        episodeResults.placements.find(p => p.queen.id === q2Result.queen.id).placement = 'BTM2';
+        handlePostLipSync();
+        return;
+    }
+
+    // Default: Single Elimination
+    const winner = q1Score >= q2Score ? q1Result : q2Result; 
+    const loser = q1Score < q2Score ? q1Result : q2Result; 
+    eliminatedQueens.push(loser.queen); 
+    episodeResults.placements.find(p => p.queen.id === winner.queen.id).placement = 'BTM2';
+    episodeResults.placements.find(p => p.queen.id === loser.queen.id).placement = 'ELIM';
+    handlePostLipSync();
 }
-function handlePostLipSync(winner, loser) { 
-    displayLipSyncResults(winner, loser, episodeResults.lipSyncSong);
+
+function handlePostLipSync() { 
+    displayLipSyncResults(episodeResults.lipSyncSong);
     advanceButton.classList.remove('hidden'); 
     advanceButton.textContent = 'View Track Record'; 
 }
+
 function runTrackRecordPhase() {
     episodePhase = 'trackRecord'; 
     switchView(simulationView);
     phaseSubheader.textContent = `Season Progress`; 
     
     currentCast.forEach(q => {
-        const queenInFullCast = fullCast.find(fq => fq.id === q.id);
         const alreadyHasPlacement = episodeResults.placements.some(p => p.queen.id === q.id);
-        if (queenInFullCast && !alreadyHasPlacement) {
+        if (!alreadyHasPlacement) {
              episodeResults.placements.push({ queen: q, placement: 'SAFE' });
         }
     });
@@ -223,18 +265,22 @@ function runTrackRecordPhase() {
         } 
     });
     
-    const elimQueenInFullCast = fullCast.find(q => q.id === eliminatedQueen.id); 
-    if (elimQueenInFullCast) {
-        elimQueenInFullCast.eliminated = true;
-        elimQueenInFullCast.epElim = episodeNumber;
-    } 
-    
-    currentCast = currentCast.filter(q => q.id !== eliminatedQueen.id); 
+    if (eliminatedQueens.length > 0) {
+        eliminatedQueens.forEach(elimQueen => {
+            const elimQueenInFullCast = fullCast.find(q => q.id === elimQueen.id); 
+            if (elimQueenInFullCast) {
+                elimQueenInFullCast.eliminated = true;
+                elimQueenInFullCast.epElim = episodeNumber;
+            } 
+        });
+        currentCast = currentCast.filter(q => !eliminatedQueens.some(eq => eq.id === q.id)); 
+    }
     
     displayTrackRecord(); 
     advanceButton.textContent = currentCast.length <= 4 ? 'Start The Finale!' : 'Next Episode';
     advanceButton.classList.remove('hidden');
 }
+
 function promptForWinner(scores) {
     phaseSubheader.textContent = "Judges' Deliberations: The Tops"; 
     const topQueens = scores.slice(0, 3); 
@@ -295,24 +341,29 @@ function handleBottomSelection(safeId, scores) {
     }); 
     promptForLipSyncWinner(); 
 }
+// --- NEW: Overhauled Mama Pao Mode Lip Sync Prompt ---
 function promptForLipSyncWinner() { 
     episodePhase = 'placements';
+    eliminatedQueens = []; // Reset eliminations
     const bottomQueens = episodeResults.placements.filter(p => p.placement === 'BTM').map(p => finalScores.find(s => s.queen.id === p.queen.id));
+    
     if (bottomQueens.length < 2) {
-        eliminatedQueen = bottomQueens.length > 0 ? bottomQueens[0].queen : currentCast.sort((a,b) => a.totalScore - b.totalScore)[0];
-        const loserPlacement = episodeResults.placements.find(p => p.queen.id === eliminatedQueen.id);
+        const sortedCastByScore = [...finalScores].sort((a,b) => a.totalScore - b.totalScore);
+        eliminatedQueens.push(bottomQueens.length > 0 ? bottomQueens[0].queen : sortedCastByScore[0].queen);
+        const loserPlacement = episodeResults.placements.find(p => p.queen.id === eliminatedQueens[0].id);
         if(loserPlacement) loserPlacement.placement = 'ELIM';
-        else episodeResults.placements.push({queen: eliminatedQueen, placement: 'ELIM' });
+        else episodeResults.placements.push({queen: eliminatedQueens[0], placement: 'ELIM' });
         
-        displayLipSyncResults(null, eliminatedQueen, "N/A");
+        displayLipSyncResults("N/A");
         advanceButton.textContent = 'View Track Record';
         advanceButton.classList.remove('hidden');
         return;
     }
+
     const [s1, s2] = bottomQueens;
     episodeResults.lipSyncSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
     
-    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Two queens stand before me.</h3><p class="text-gray-300">They will lip sync to ${episodeResults.lipSyncSong}. Based on their passion and performance, you decide who stays.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Two queens stand before me.</h3><p class="text-gray-300">They will lip sync to ${episodeResults.lipSyncSong}. Mama, you decide their fate.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
     const createButton = (s) => {
         const fullQueenData = fullCast.find(q => q.id === s.queen.id);
         const trackRecordHTML = fullQueenData.trackRecord.map(p => `<span class="track-record-pill placement-${p}">${p}</span>`).join(' ');
@@ -332,25 +383,43 @@ function promptForLipSyncWinner() {
     };
     html += createButton(s1);
     html += createButton(s2);
+    html += `<button class="secondary-button w-full p-4 rounded-lg col-span-1 md:col-span-2 bg-green-800/70 border-green-500" data-decision="shantay">
+                <p class="text-xl font-bold">Double Shantay</p>
+                <p class="text-sm mt-1">Condragulations, you are both safe!</p>
+             </button>`;
+    html += `<button class="secondary-button w-full p-4 rounded-lg col-span-1 md:col-span-2 bg-red-800/70 border-red-500" data-decision="sashay">
+                <p class="text-xl font-bold">Double Sashay</p>
+                <p class="text-sm mt-1">I must ask you both to sashay away.</p>
+             </button>`;
     html += `</div>`;
+
     resultsContainer.innerHTML = html;
     resultsContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', (e) => {
         e.currentTarget.classList.add('selected');
         resultsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
-        const winnerId = btn.dataset.winnerId;
-        const winner = winnerId === s1.queen.id ? s1.queen : s2.queen;
-        const loser = winnerId === s1.queen.id ? s2.queen : s1.queen;
-        eliminatedQueen = loser;
         
-        const winnerPlacement = episodeResults.placements.find(p => p.queen.id === winner.id);
-        const loserPlacement = episodeResults.placements.find(p => p.queen.id === loser.id);
-        if(winnerPlacement) winnerPlacement.placement = 'BTM2';
-        if(loserPlacement) loserPlacement.placement = 'ELIM';
+        const decision = e.currentTarget.dataset.decision;
+        if (decision === 'shantay') {
+            episodeResults.placements.find(p => p.queen.id === s1.queen.id).placement = 'BTM2';
+            episodeResults.placements.find(p => p.queen.id === s2.queen.id).placement = 'BTM2';
+        } else if (decision === 'sashay') {
+            eliminatedQueens = [s1.queen, s2.queen];
+            episodeResults.placements.find(p => p.queen.id === s1.queen.id).placement = 'ELIM';
+            episodeResults.placements.find(p => p.queen.id === s2.queen.id).placement = 'ELIM';
+        } else {
+            const winnerId = e.currentTarget.dataset.winnerId;
+            const winner = winnerId === s1.queen.id ? s1.queen : s2.queen;
+            const loser = winnerId === s1.queen.id ? s2.queen : s1.queen;
+            eliminatedQueens = [loser];
+            episodeResults.placements.find(p => p.queen.id === winner.id).placement = 'BTM2';
+            episodeResults.placements.find(p => p.queen.id === loser.id).placement = 'ELIM';
+        }
 
-        setTimeout(() => handlePostLipSync(winner, loser), 500);
+        setTimeout(() => handlePostLipSync(), 500);
     }));
     advanceButton.classList.add('hidden');
 }
+
 function displayAllCritiques(scores) { 
     const theme = runwayThemes[Math.floor(Math.random() * runwayThemes.length)]; 
     let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Runway Theme: ${theme}</h3><p class="text-gray-300">The judges have watched the performances and seen the runways. Here are their thoughts...</p></div>`; 
@@ -385,11 +454,51 @@ function displayPlacements(placements) {
     }); 
     resultsContainer.innerHTML = `<div class="text-center mb-4"><p class="text-lg italic text-gray-300">After careful deliberation...</p></div>` + html + `</div>`;
 }
-function displayLipSyncResults(winner, loser, song) {
-    if (!winner) { 
+// --- NEW: Overhauled Lip Sync Results Display ---
+function displayLipSyncResults(song) {
+    const lipSyncers = episodeResults.placements.filter(p => p.placement === 'BTM2' || p.placement === 'ELIM').map(p => p.queen);
+    
+    // Case 1: Double Sashay
+    if (eliminatedQueens.length === 2) {
+        resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto">
+            <h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2>
+            <p class="text-lg">The queens performed ${song}, but failed to impress...</p>
+            <div class="flex justify-center items-center gap-4 md:gap-8 py-8">
+                <div class="text-center"><img src="${eliminatedQueens[0].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img"><p class="font-bold text-xl mt-2">${eliminatedQueens[0].name}</p></div>
+                <p class="font-display text-6xl text-pink-500">VS</p>
+                <div class="text-center"><img src="${eliminatedQueens[1].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img"><p class="font-bold text-xl mt-2">${eliminatedQueens[1].name}</p></div>
+            </div>
+            <p class="text-gray-300 italic text-lg">"I'm sorry my dears, but it's a no from me."</p>
+            <p class="font-display text-3xl mt-2 text-red-400">Both of you, sashay away.</p>
+        </div>`;
+        return;
+    }
+
+    // Case 2: Double Shantay
+    if (eliminatedQueens.length === 0 && lipSyncers.length === 2) {
+         resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto">
+            <h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2>
+            <p class="text-lg">The queens performed ${song} and set the stage on fire!</p>
+            <div class="flex justify-center items-center gap-4 md:gap-8 py-8">
+                <div class="text-center"><img src="${lipSyncers[0].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 object-cover placement-WIN-img"><p class="font-bold text-xl mt-2">${lipSyncers[0].name}</p></div>
+                <p class="font-display text-6xl text-pink-500">VS</p>
+                <div class="text-center"><img src="${lipSyncers[1].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 object-cover placement-WIN-img"><p class="font-bold text-xl mt-2">${lipSyncers[1].name}</p></div>
+            </div>
+            <p class="text-gray-300 italic text-lg">"You are both winners, baby!"</p>
+            <p class="font-display text-4xl text-green-400 pt-4">Condragulations, shantay you BOTH stay.</p>
+        </div>`;
+        return;
+    }
+    
+    // Case 3: Single Winner / No lip sync
+    const loser = eliminatedQueens[0];
+    const winner = lipSyncers.find(q => q.id !== loser?.id);
+
+    if (!winner) { // No Lip Sync took place
         resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">A FATEFUL DECISION</h2><p class="text-lg">Due to the results of the challenge, there is no lip sync this week.</p><p class="text-gray-300 italic text-lg">The judges have decided that one queen's time has come to an end.</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${loser.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
         return; 
     } 
+
     let narrative = `Both queens gave it their all, but ${winner.name}'s passion and precision on stage gave her the edge. She truly embodied the spirit of the song.`; 
     resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The bottom two queens must perform ${song}!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${winner.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 object-cover placement-WIN-img"><p class="font-bold text-xl mt-2">${winner.name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="${loser.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="text-gray-300 italic text-lg">"${narrative}"</p><p class="font-display text-4xl text-green-400 pt-4">Shantay, you stay, ${winner.name}.</p><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
 }
@@ -399,7 +508,7 @@ function displayTrackRecord() {
     const eliminatedQueens = fullCast.filter(q => q.eliminated).sort((a,b) => b.epElim - a.epElim);
 
     const lastEpisodeIndex = episodeNumber - 1;
-    const placementOrder = { 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM2': 4 };
+    const placementOrder = { 'WINNER': -2, 'RUNNER-UP': -1, 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM2': 4 };
     activeQueens.sort((a,b) => {
         const placementA = a.trackRecord[lastEpisodeIndex];
         const placementB = b.trackRecord[lastEpisodeIndex];
