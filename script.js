@@ -3,12 +3,12 @@
 // DATA FIX: Restored the full, correct queen data to fix the season sorting bug.
 const queens = [
      // S1 with Images
-    { id: 'brigiding', name: 'Brigiding', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a5/BrigidingDRP1MiniPromo.jpg', stats: { runway: 7, comedy: 7, acting: 7, dance: 8, design: 5, lipsync: 8 } },
-    { id: 'corazon', name: 'Corazon', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/71/CorazonDRP1MiniPromo.jpg', stats: { runway: 6, comedy: 5, acting: 6, dance: 6, design: 8, lipsync: 7 } },
-    { id: 'eva_le_queen', name: 'Eva Le Queen', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/3b/EvaLeQueenDRP1MiniPromo.jpg', stats: { runway: 8, comedy: 9, acting: 8, dance: 6, design: 7, lipsync: 7 } },
-    { id: 'gigi_era', name: 'Gigi Era', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/c5/GigiEraDRP1MiniPromo.jpg', stats: { runway: 6, comedy: 6, acting: 7, dance: 7, design: 5, lipsync: 9 } },
-    { id: 'lady_morgana', name: 'Lady Morgana', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/62/LadyMorganaDRP1MiniPromo.jpg', stats: { runway: 5, comedy: 8, acting: 7, dance: 6, design: 6, lipsync: 7 } },
-    { id: 'marina_summers', name: 'Marina Summers', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a2/MarinaSummersDRP1MiniPromo.jpg', stats: { runway: 9, comedy: 6, acting: 7, dance: 9, design: 9, lipsync: 8 } },
+    { id: 'brigiding', name: 'Brigiding', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a5/BrigidingDRP1MiniPromo.jpg', stats: { runway: 9, comedy: 7, acting: 7, dance: 9, design: 7, lipsync: 9 } },
+    { id: 'corazon', name: 'Corazon', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/71/CorazonDRP1MiniPromo.jpg', stats: { runway: 7, comedy: 5, acting: 5, dance: 6, design: 4, lipsync: 5 } },
+    { id: 'eva_le_queen', name: 'Eva Le Queen', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/3b/EvaLeQueenDRP1MiniPromo.jpg', stats: { runway: 8, comedy: 9, acting: 8, dance: 5, design: 7, lipsync: 7 } },
+    { id: 'gigi_era', name: 'Gigi Era', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/c5/GigiEraDRP1MiniPromo.jpg', stats: { runway: 6, comedy: 5, acting: 7, dance: 8, design: 5, lipsync: 6 } },
+    { id: 'lady_morgana', name: 'Lady Morgana', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/62/LadyMorganaDRP1MiniPromo.jpg', stats: { runway: 6, comedy: 9, acting: 8, dance: 7, design: 6, lipsync: 9} },
+    { id: 'marina_summers', name: 'Marina Summers', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a2/MarinaSummersDRP1MiniPromo.jpg', stats: { runway: 9, comedy: 8, acting: 8, dance: 9, design: 9, lipsync: 10 } },
     { id: 'minty_fresh', name: 'Minty Fresh', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/25/MintyFreshDRP1MiniPromo.jpg', stats: { runway: 9, comedy: 7, acting: 7, dance: 8, design: 7, lipsync: 9 } },
     { id: 'precious_paula_nicole', name: 'Precious Paula Nicole', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/0f/PreciousPaulaNicoleDRP1MiniPromo.jpg', stats: { runway: 8, comedy: 8, acting: 9, dance: 7, design: 7, lipsync: 10 } },
     { id: 'prince', name: 'Prince', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/ec/PrinceDRP1MiniPromo.jpg', stats: { runway: 7, comedy: 5, acting: 6, dance: 6, design: 5, lipsync: 7 } },
