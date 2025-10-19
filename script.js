@@ -1,48 +1,47 @@
 // --- DATA ---
+// Image URLs have been added to each queen object
 const queens = [
-     // S1 (Recalculated)
-    { id: 'brigiding', name: 'Brigiding', season: 1, stats: { runway: 7, comedy: 7, acting: 7, dance: 8, design: 5, lipsync: 8 } },
-    { id: 'corazon', name: 'Corazon', season: 1, stats: { runway: 6, comedy: 5, acting: 6, dance: 6, design: 8, lipsync: 7 } },
-    { id: 'eva_le_queen', name: 'Eva Le Queen', season: 1, stats: { runway: 8, comedy: 9, acting: 8, dance: 6, design: 7, lipsync: 7 } },
-    { id: 'gigi_era', name: 'Gigi Era', season: 1, stats: { runway: 6, comedy: 6, acting: 7, dance: 7, design: 5, lipsync: 9 } },
-    { id: 'lady_morgana', name: 'Lady Morgana', season: 1, stats: { runway: 5, comedy: 8, acting: 7, dance: 6, design: 6, lipsync: 7 } },
-    { id: 'marina_summers', name: 'Marina Summers', season: 1, stats: { runway: 9, comedy: 6, acting: 7, dance: 9, design: 9, lipsync: 8 } },
-    { id: 'minty_fresh', name: 'Minty Fresh', season: 1, stats: { runway: 9, comedy: 7, acting: 7, dance: 8, design: 7, lipsync: 9 } },
-    { id: 'precious_paula_nicole', name: 'Precious Paula Nicole', season: 1, stats: { runway: 8, comedy: 8, acting: 9, dance: 7, design: 7, lipsync: 10 } },
-    { id: 'prince', name: 'Prince', season: 1, stats: { runway: 7, comedy: 5, acting: 6, dance: 6, design: 5, lipsync: 7 } },
-    { id: 'turing', name: 'Turing', season: 1, stats: { runway: 7, comedy: 7, acting: 8, dance: 9, design: 6, lipsync: 8 } },
-    { id: 'vinas_deluxe', name: 'Viñas DeLuxe', season: 1, stats: { runway: 8, comedy: 10, acting: 8, dance: 7, design: 7, lipsync: 8 } },
-    { id: 'xilhouete', name: 'Xilhouete', season: 1, stats: { runway: 9, comedy: 8, acting: 8, dance: 7, design: 9, lipsync: 8 } },
-    // S2 (Recalculated)
-    { id: 'arizona_brandy', name: 'Arizona Brandy', season: 2, stats: { runway: 7, comedy: 9, acting: 8, dance: 7, design: 7, lipsync: 9 } },
-    { id: 'astrid_mercury', name: 'Astrid Mercury', season: 2, stats: { runway: 7, comedy: 6, acting: 7, dance: 8, design: 6, lipsync: 7 } },
-    { id: 'bernie', name: 'Bernie', season: 2, stats: { runway: 9, comedy: 8, acting: 9, dance: 8, design: 8, lipsync: 8 } },
-    { id: 'captivating_katkat', name: 'Captivating Katkat', season: 2, stats: { runway: 9, comedy: 8, acting: 7, dance: 9, design: 7, lipsync: 10 } },
-    { id: 'deedee_marie_holliday', name: 'DeeDee Marié Holliday', season: 2, stats: { runway: 8, comedy: 7, acting: 7, dance: 8, design: 7, lipsync: 6 } },
-    { id: 'hana_beshie', name: 'Hana Beshie', season: 2, stats: { runway: 6, comedy: 8, acting: 7, dance: 7, design: 6, lipsync: 8 } },
-    { id: 'm1ss_jade_so', name: 'M1ss Jade So', season: 2, stats: { runway: 9, comedy: 7, acting: 8, dance: 8, design: 9, lipsync: 9 } },
-    { id: 'matilduh', name: 'Matilduh', season: 2, stats: { runway: 7, comedy: 7, acting: 6, dance: 7, design: 7, lipsync: 7 } },
-    { id: 'nicole_pardaux', name: 'Nicole Pardaux', season: 2, stats: { runway: 8, comedy: 6, acting: 6, dance: 7, design: 6, lipsync: 5 } },
-    { id: 'ov_cunt', name: 'ØV Cünt', season: 2, stats: { runway: 10, comedy: 6, acting: 7, dance: 8, design: 9, lipsync: 9 } },
-    { id: 'tiny_deluxe', name: 'Tiny DeLuxe', season: 2, stats: { runway: 6, comedy: 7, acting: 7, dance: 7, design: 6, lipsync: 6 } },
-    { id: 'veruschka_levels', name: 'Veruschka Levels', season: 2, stats: { runway: 8, comedy: 7, acting: 8, dance: 7, design: 7, lipsync: 6 } },
-    // S3 (Recalculated)
-    { id: 'maxie', name: 'Maxie', season: 3, stats: { runway: 9, comedy: 10, acting: 9, dance: 7, design: 8, lipsync: 6 } },
-    { id: 'khianna', name: 'Khianna', season: 3, stats: { runway: 8, comedy: 7, acting: 8, dance: 8, design: 7, lipsync: 8 } },
-    { id: 'angel', name: 'Angel', season: 3, stats: { runway: 7, comedy: 6, acting: 7, dance: 9, design: 9, lipsync: 9 } },
-    { id: 'tita_baby', name: 'Tita Baby', season: 3, stats: { runway: 7, comedy: 8, acting: 8, dance: 7, design: 7, lipsync: 8 } },
-    { id: 'zymba_ding', name: 'Zymba Ding', season: 3, stats: { runway: 8, comedy: 7, acting: 7, dance: 9, design: 8, lipsync: 7 } },
-    { id: 'myx_chanel', name: 'Myx Chanel', season: 3, stats: { runway: 9, comedy: 8, acting: 7, dance: 7, design: 8, lipsync: 8 } },
-    { id: 'popstar_bench', name: 'Popstar Bench', season: 3, stats: { runway: 7, comedy: 7, acting: 7, dance: 8, design: 6, lipsync: 8 } },
-    { id: 'john_fedellaga', name: 'John Fedellaga', season: 3, stats: { runway: 8, comedy: 8, acting: 8, dance: 7, design: 8, lipsync: 6 } },
-    { id: 'j_quinn', name: 'J Quinn', season: 3, stats: { runway: 7, comedy: 6, acting: 6, dance: 7, design: 7, lipsync: 8 } },
-    { id: 'yudipota', name: 'Yudipota', season: 3, stats: { runway: 8, comedy: 8, acting: 8, dance: 8, design: 8, lipsync: 8 } },
-    { id: 'versex', name: 'Versex', season: 3, stats: { runway: 7, comedy: 6, acting: 6, dance: 7, design: 7, lipsync: 5 } },
+     // S1 with Images
+    { id: 'brigiding', name: 'Brigiding', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/b/b3/Brigiding_DRPHS1.jpg', stats: { runway: 7, comedy: 7, acting: 7, dance: 8, design: 5, lipsync: 8 } },
+    { id: 'corazon', name: 'Corazon', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/c/c9/Corazon_DRPHS1.jpg', stats: { runway: 6, comedy: 5, acting: 6, dance: 6, design: 8, lipsync: 7 } },
+    { id: 'eva_le_queen', name: 'Eva Le Queen', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/9/9e/Eva_Le_Queen_DRPHS1.jpg', stats: { runway: 8, comedy: 9, acting: 8, dance: 6, design: 7, lipsync: 7 } },
+    { id: 'gigi_era', name: 'Gigi Era', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/8/82/Gigi_Era_DRPHS1.jpg', stats: { runway: 6, comedy: 6, acting: 7, dance: 7, design: 5, lipsync: 9 } },
+    { id: 'lady_morgana', name: 'Lady Morgana', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/c/c2/Lady_Morgana_DRPHS1.jpg', stats: { runway: 5, comedy: 8, acting: 7, dance: 6, design: 6, lipsync: 7 } },
+    { id: 'marina_summers', name: 'Marina Summers', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/4/41/Marina_Summers_DRPHS1.jpg', stats: { runway: 9, comedy: 6, acting: 7, dance: 9, design: 9, lipsync: 8 } },
+    { id: 'minty_fresh', name: 'Minty Fresh', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/3/30/Minty_Fresh_DRPHS1.jpg', stats: { runway: 9, comedy: 7, acting: 7, dance: 8, design: 7, lipsync: 9 } },
+    { id: 'precious_paula_nicole', name: 'Precious Paula Nicole', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/a/a2/Precious_Paula_Nicole_DRPHS1.jpg', stats: { runway: 8, comedy: 8, acting: 9, dance: 7, design: 7, lipsync: 10 } },
+    { id: 'prince', name: 'Prince', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/b/be/Prince_DRPHS1.jpg', stats: { runway: 7, comedy: 5, acting: 6, dance: 6, design: 5, lipsync: 7 } },
+    { id: 'turing', name: 'Turing', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/3/36/Turing_DRPHS1.jpg', stats: { runway: 7, comedy: 7, acting: 8, dance: 9, design: 6, lipsync: 8 } },
+    { id: 'vinas_deluxe', name: 'Viñas DeLuxe', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/7/7b/Vi%C3%B1as_DeLuxe_DRPHS1.jpg', stats: { runway: 8, comedy: 10, acting: 8, dance: 7, design: 7, lipsync: 8 } },
+    { id: 'xilhouete', name: 'Xilhouete', season: 1, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/4/42/Xilhouete_DRPHS1.jpg', stats: { runway: 9, comedy: 8, acting: 8, dance: 7, design: 9, lipsync: 8 } },
+    // S2 with Images
+    { id: 'arizona_brandy', name: 'Arizona Brandy', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/a/a2/Arizona_Brandy_DRPHS2.jpg', stats: { runway: 7, comedy: 9, acting: 8, dance: 7, design: 7, lipsync: 9 } },
+    { id: 'astrid_mercury', name: 'Astrid Mercury', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/b/b3/Astrid_Mercury_DRPHS2.jpg', stats: { runway: 7, comedy: 6, acting: 7, dance: 8, design: 6, lipsync: 7 } },
+    { id: 'bernie', name: 'Bernie', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/e/e6/Bernie_DRPHS2.jpg', stats: { runway: 9, comedy: 8, acting: 9, dance: 8, design: 8, lipsync: 8 } },
+    { id: 'captivating_katkat', name: 'Captivating Katkat', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/a/a2/Captivating_Katkat_DRPHS2.jpg', stats: { runway: 9, comedy: 8, acting: 7, dance: 9, design: 7, lipsync: 10 } },
+    { id: 'deedee_marie_holliday', name: 'DeeDee Marié Holliday', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/2/20/DeeDee_Mari%C3%A9_Holliday_DRPHS2.jpg', stats: { runway: 8, comedy: 7, acting: 7, dance: 8, design: 7, lipsync: 6 } },
+    { id: 'hana_beshie', name: 'Hana Beshie', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/d/d4/Hana_Beshie_DRPHS2.jpg', stats: { runway: 6, comedy: 8, acting: 7, dance: 7, design: 6, lipsync: 8 } },
+    { id: 'm1ss_jade_so', name: 'M1ss Jade So', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/9/99/M1ss_Jade_So_DRPHS2.jpg', stats: { runway: 9, comedy: 7, acting: 8, dance: 8, design: 9, lipsync: 9 } },
+    { id: 'matilduh', name: 'Matilduh', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/c/c3/Matilduh_DRPHS2.jpg', stats: { runway: 7, comedy: 7, acting: 6, dance: 7, design: 7, lipsync: 7 } },
+    { id: 'nicole_pardaux', name: 'Nicole Pardaux', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/8/87/Nicole_Pardaux_DRPHS2.jpg', stats: { runway: 8, comedy: 6, acting: 6, dance: 7, design: 6, lipsync: 5 } },
+    { id: 'ov_cunt', name: 'ØV Cünt', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/9/99/%C3%98V_C%C3%BCnt_DRPHS2.jpg', stats: { runway: 10, comedy: 6, acting: 7, dance: 8, design: 9, lipsync: 9 } },
+    { id: 'tiny_deluxe', name: 'Tiny DeLuxe', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/d/d4/Tiny_DeLuxe_DRPHS2.jpg', stats: { runway: 6, comedy: 7, acting: 7, dance: 7, design: 6, lipsync: 6 } },
+    { id: 'veruschka_levels', name: 'Veruschka Levels', season: 2, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/5/5e/Veruschka_Levels_DRPHS2.jpg', stats: { runway: 8, comedy: 7, acting: 8, dance: 7, design: 7, lipsync: 6 } },
+    // S3 with Images
+    { id: 'maxie', name: 'Maxie', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/9/91/Maxie_DRPHS3.jpg', stats: { runway: 9, comedy: 10, acting: 9, dance: 7, design: 8, lipsync: 6 } },
+    { id: 'khianna', name: 'Khianna', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/d/d0/Khianna_DRPHS3.jpg', stats: { runway: 8, comedy: 7, acting: 8, dance: 8, design: 7, lipsync: 8 } },
+    { id: 'angel', name: 'Angel', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/4/4b/Angel_DRPHS3.jpg', stats: { runway: 7, comedy: 6, acting: 7, dance: 9, design: 9, lipsync: 9 } },
+    { id: 'tita_baby', name: 'Tita Baby', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/7/7b/Tita_Baby_DRPHS3.jpg', stats: { runway: 7, comedy: 8, acting: 8, dance: 7, design: 7, lipsync: 8 } },
+    { id: 'zymba_ding', name: 'Zymba Ding', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/7/73/Zymba_Ding_DRPHS3.jpg', stats: { runway: 8, comedy: 7, acting: 7, dance: 9, design: 8, lipsync: 7 } },
+    { id: 'myx_chanel', name: 'Myx Chanel', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/1/18/Myx_Chanel_DRPHS3.jpg', stats: { runway: 9, comedy: 8, acting: 7, dance: 7, design: 8, lipsync: 8 } },
+    { id: 'popstar_bench', name: 'Popstar Bench', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/c/c5/Popstar_Bench_DRPHS3.jpg', stats: { runway: 7, comedy: 7, acting: 7, dance: 8, design: 6, lipsync: 8 } },
+    { id: 'john_fedellaga', name: 'John Fedellaga', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/5/57/John_Fedellaga_DRPHS3.jpg', stats: { runway: 8, comedy: 8, acting: 8, dance: 7, design: 8, lipsync: 6 } },
+    { id: 'j_quinn', name: 'J Quinn', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/7/71/J_Quinn_DRPHS3.jpg', stats: { runway: 7, comedy: 6, acting: 6, dance: 7, design: 7, lipsync: 8 } },
+    { id: 'yudipota', name: 'Yudipota', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/3/3e/Yudipota_DRPHS3.jpg', stats: { runway: 8, comedy: 8, acting: 8, dance: 8, design: 8, lipsync: 8 } },
+    { id: 'versex', name: 'Versex', season: 3, image: 'https://static.wikia.nocookie.net/rupaulsdragrace/images/4/4c/Versex_DRPHS3.jpg', stats: { runway: 7, comedy: 6, acting: 6, dance: 7, design: 7, lipsync: 5 } },
 ];
 const challenges = [ { name: "Snatch Game", primaryStat: 'comedy', intro: "The queens must impersonate celebrities in the legendary Snatch Game!" }, { name: "The Rusical", primaryStat: 'dance', intro: "It's time for the Rusical! The queens must sing, dance, and act their hearts out." }, { name: "Girl Groups", primaryStat: 'dance', intro: "Pop star fantasies come alive as the queens form two rival girl groups." }, { name: "Acting Challenge", primaryStat: 'acting', intro: "The queens star in a new teleserye, but who will steal the scene?" }, { name: "Improv", primaryStat: 'comedy', intro: "Queens must think on their feet in a hilarious improv challenge." }, { name: "Sewing", primaryStat: 'design', intro: "Using unconventional materials, the queens must create a look from scratch." }, { name: "The Ball", primaryStat: 'design', intro: "The queens must serve three distinct looks, including one they make themselves, in the legendary Ball." }, { name: "Makeover", primaryStat: 'design', intro: "The queens give drag makeovers to some very special guests!" }, { name: "Talent Show", primaryStat: 'acting', intro: "In the grand premiere, the queens must showcase their unique talents." }, { name: "Roast", primaryStat: 'comedy', intro: "The library is open! The queens must roast the judges and each other." }, ];
 const runwayThemes = ["Filipiniana Extravaganza", "Pearls & Perlas", "Mythical Creatures", "Jeepney Realness", "Divas of the Decades", "Horror-scope", "Terno-dactyl", "Flower Power", "Miss Universe Couture", "Intergalactic Drag", "Aswang Chic"];
-
-// COSMETIC CHANGE: Massively expanded and updated OPM lipsync song list
 const lipsyncSongs = [
     "'Sirena' by Gloc-9",
     "'Upuan' by Gloc-9", 
@@ -73,8 +72,6 @@ const lipsyncSongs = [
     "'Bongga Ka 'Day' by Hotdog",
     "'Please, Please, Please' by Sabrina Carpenter"
 ];
-
-// COSMETIC CHANGE: More critique options to reduce repetition
 const critiques = {
     comedy: { 
         high: ["'s comedic timing was impeccable, leaving the judges in stitches.", "'s celebrity impersonation was spot-on and hilariously funny.", "delivered a knockout performance, with jokes that consistently landed.", "was a comedic genius, their performance was pure gold."], 
@@ -222,7 +219,6 @@ function runTrackRecordPhase() {
     advanceButton.classList.remove('hidden');
 }
 function promptForWinner(scores) {
-    // COSMETIC CHANGE: More varied narrative text
     const deliberationTexts = ["The judges were blown away by the top queens.", "It was a tough decision, but these queens rose to the top.", "These queens absolutely slayed the challenge."];
     phaseSubheader.textContent = "Mama Pao's Deliberations: The Tops"; 
     const topQueens = scores.slice(0, 3); 
@@ -239,7 +235,6 @@ function handleWinnerSelection(winnerId, scores) {
     promptForBottoms(scores); 
 }
 function promptForBottoms(scores) {
-    // COSMETIC CHANGE: More varied narrative text
     const deliberationTexts = ["Unfortunately, three queens failed to impress.", "These queens found themselves at the bottom of the pack.", "For these three queens, the critiques were harsh."];
     phaseSubheader.textContent = "Mama Pao's Deliberations: The Bottoms"; 
     const bottomQueens = scores.slice(-3); 
@@ -318,12 +313,12 @@ function displayPlacements(placements) {
     const deliberationTexts = ["After careful deliberation...", "The judges have made some tough decisions...", "The panel has spoken..."];
     phaseSubheader.textContent = "The Judges have made their decisions..."; 
     let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">'; 
-    placements.sort((a, b) => { const order = { 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM': 4, 'ELIM': 5, 'BTM2': 4 }; return order[a.placement] - order[b.placement]; }).forEach(({queen, placement}) => { const placementText = placement; const winClass = placement === 'WIN' ? 'placement-WIN-card' : ''; const winImgClass = placement === 'WIN' ? 'placement-WIN-img' : ''; html += `<div class="bg-black/50 p-3 rounded-lg text-center ${winClass} transition-all duration-500"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(queen.name.replace(/\s+/g, '\n'))}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 ${winImgClass}"><p class="font-bold text-lg mt-2">${queen.name}</p><p class="font-display text-2xl tracking-widest text-pink-400">${placementText}</p></div>`; }); 
+    placements.sort((a, b) => { const order = { 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM': 4, 'ELIM': 5, 'BTM2': 4 }; return order[a.placement] - order[b.placement]; }).forEach(({queen, placement}) => { const placementText = placement; const winClass = placement === 'WIN' ? 'placement-WIN-card' : ''; const winImgClass = placement === 'WIN' ? 'placement-WIN-img' : ''; html += `<div class="bg-black/50 p-3 rounded-lg text-center ${winClass} transition-all duration-500"><img src="${queen.image}" onerror="this.onerror=null;this.src='https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(queen.name.replace(/\s+/g, '\n'))}';" class="w-24 h-24 object-cover rounded-full mx-auto border-4 border-gray-600 ${winImgClass}"><p class="font-bold text-lg mt-2">${queen.name}</p><p class="font-display text-2xl tracking-widest text-pink-400">${placementText}</p></div>`; }); 
     resultsContainer.innerHTML = `<div class="text-center mb-4"><p class="text-lg italic text-gray-300">${deliberationTexts[Math.floor(Math.random() * deliberationTexts.length)]}</p></div>` + html + `</div>`;
 }
 function displayLipSyncResults(winner, loser, song) {
     if (!winner) { 
-        resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">A FATEFUL DECISION</h2><p class="text-lg">Due to the results of the challenge, there is no lip sync this week.</p><p class="text-gray-300 italic text-lg">The judges have decided that one queen's time has come to an end.</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(loser.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
+        resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">A FATEFUL DECISION</h2><p class="text-lg">Due to the results of the challenge, there is no lip sync this week.</p><p class="text-gray-300 italic text-lg">The judges have decided that one queen's time has come to an end.</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${loser.image}" onerror="this.onerror=null;this.src='https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(loser.name.replace(/\s+/g, '\n'))}';" class="w-32 h-32 object-cover rounded-full mx-auto border-4 border-red-500 placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
         return; 
     } 
     const narratives = [
@@ -331,7 +326,7 @@ function displayLipSyncResults(winner, loser, song) {
         `It was a lip sync for the ages! In the end, ${winner.name}'s star quality was simply undeniable.`,
         `${loser.name} put up a valiant fight, but ${winner.name} channeled the song's energy and left it all on the stage.`
     ];
-    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The bottom two queens must perform ${song}!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(winner.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 placement-WIN-img"><p class="font-bold text-xl mt-2">${winner.name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(loser.name.replace(/\s+/g, '\n'))}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="text-gray-300 italic text-lg">"${narratives[Math.floor(Math.random() * narratives.length)]}"</p><p class="font-display text-4xl text-green-400 pt-4">Shantay, you stay, ${winner.name}.</p><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
+    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The bottom two queens must perform ${song}!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${winner.image}" onerror="this.onerror=null;this.src='https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(winner.name.replace(/\s+/g, '\n'))}';" class="w-32 h-32 object-cover rounded-full mx-auto border-4 border-green-400 placement-WIN-img"><p class="font-bold text-xl mt-2">${winner.name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="${loser.image}" onerror="this.onerror=null;this.src='https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(loser.name.replace(/\s+/g, '\n'))}';" class="w-32 h-32 object-cover rounded-full mx-auto border-4 border-red-500 placement-ELIM-img"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="text-gray-300 italic text-lg">"${narratives[Math.floor(Math.random() * narratives.length)]}"</p><p class="font-display text-4xl text-green-400 pt-4">Shantay, you stay, ${winner.name}.</p><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`; 
 }
 function calculateTrackRecordScore(queen) { const placementScores = { 'WINNER': 6, 'RUNNER-UP': 5, 'WIN': 5, 'HIGH': 4, 'SAFE': 3, 'LOW': 2, 'BTM2': 1, 'ELIM': 0 }; return queen.trackRecord.reduce((acc, placement) => acc + (placementScores[placement] || 0), 0); }
 function displayTrackRecord(isFinale = false) {
@@ -448,7 +443,7 @@ function displayWinner(winner, runnerUp) {
 function updateSelectionUI() { 
     castList.innerHTML = ''; 
     castPlaceholder.style.display = selectedCast.length === 0 ? 'block' : 'none'; 
-    selectedCast.forEach(q => { const li = document.createElement('div'); li.className = 'flex items-center bg-gray-800/80 p-2 rounded-lg'; li.innerHTML = `<img src="https://placehold.co/40x40/1F2937/EC4899?text=${encodeURIComponent(q.name.split(' ').map(n=>n[0]).join(''))}" class="w-8 h-8 rounded-full mr-3"><span class="font-bold text-sm">${q.name}</span>`; castList.appendChild(li); }); 
+    selectedCast.forEach(q => { const li = document.createElement('div'); li.className = 'flex items-center bg-gray-800/80 p-2 rounded-lg'; li.innerHTML = `<img src="${q.image}" onerror="this.onerror=null;this.src='https://placehold.co/40x40/1F2937/EC4899?text=${encodeURIComponent(q.name.split(' ').map(n=>n[0]).join(''))}';" class="w-8 h-8 object-cover rounded-full mr-3"><span class="font-bold text-sm">${q.name}</span>`; castList.appendChild(li); }); 
     castCounter.textContent = `Selected: ${selectedCast.length} / ${MAX_CAST_SIZE}`; 
     const size = selectedCast.length; 
     startButton.disabled = !(size >= MIN_CAST_SIZE && size <= MAX_CAST_SIZE); 
@@ -480,7 +475,7 @@ window.addEventListener('load', () => {
         const card = document.createElement('div'); 
         card.className = 'queen-card bg-gray-800/80 rounded-lg p-2 text-center cursor-pointer border-2 border-transparent'; 
         card.dataset.id = q.id; 
-        card.innerHTML = `<img src="https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(q.name.replace(/\s+/g, '\n'))}" class="w-full h-auto rounded-md"><p class="mt-2 text-xs font-bold truncate">${q.name}</p>`; 
+        card.innerHTML = `<img src="${q.image}" onerror="this.onerror=null;this.src='https://placehold.co/150x150/1F2937/EC4899?text=${encodeURIComponent(q.name.replace(/\s+/g, '\n'))}';" class="w-full h-auto aspect-square object-cover rounded-md"><p class="mt-2 text-xs font-bold truncate">${q.name}</p>`; 
         card.addEventListener('click', () => toggleQueenSelection(q)); 
         queenGrid.appendChild(card);
     });
