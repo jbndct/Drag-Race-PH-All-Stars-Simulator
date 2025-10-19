@@ -1,6 +1,6 @@
-Drag Race Philippines Simulator
+Drag Race Philippines All Stars Simulator
 
-🏁 Mabuhay, Welcome to the Werk Room! 🏁
+🏁 Mabu-heyyyy, Welcome to the Werk Room! 🏁
 
 This is a fan-made simulator celebrating the charisma, uniqueness, nerve, and talent of the queens from Drag Race Philippines. Assemble your dream cast from all seasons and watch the drama unfold as they compete in iconic challenges, stomp the runway, and lip sync for their lives to determine who will be crowned the Philippines' Next Drag Superstar!
 
