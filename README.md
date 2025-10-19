@@ -29,7 +29,7 @@ This project was created as a fun learning exercise to practice web development 
 
 👑 Game Modes
 
-1. Standard Mode: An automated simulation where placements and eliminations are determined by the queens' stats and a touch of random luck.Surprising outcomes can and will happen!
+1. Standard Mode: An automated simulation where placements and eliminations are determined by the queens' stats and a touch of random luck. Surprising outcomes can and will happen!
 2. Mama Pao Mode: You are the head judge! After the performances, you get to decide who wins the challenge, who is safe, and who wins the lip sync. The fate of the queens is in your hands.
 
 📝 Disclaimer
