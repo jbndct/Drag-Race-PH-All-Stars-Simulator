@@ -142,28 +142,24 @@ body::after {
 .critique-bad { border-left-color: #d97706; }
 
 .view { transition: opacity 0.5s ease-in-out, visibility 0.5s; }
-.view.hidden { visibility: hidden; }
+.view.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
 .track-record-table th, .track-record-table td { padding: 0.5rem; text-align: center; vertical-align: middle; border: 1px solid #374151; }
-
-/* FIX: Allow queen names to wrap and ensure column has space */
 .track-record-table tbody td:first-child {
-    min-width: 140px; /* Provide a healthy minimum width */
+    min-width: 140px;
 }
-
-.track-record-table tbody td:first-child .queen-name {
-    white-space: normal; /* Allow long names to wrap onto the next line */
-    word-break: break-word; /* Ensure very long words don't overflow */
+.track-record-table .queen-name {
+    white-space: normal;
+    word-break: break-word;
     text-align: left;
 }
-
 .placement-WIN { background-color: #a942a9; color: white; font-weight: bold; }
 .placement-HIGH { background-color: #3b82f6; }
 .placement-SAFE { background-color: #4b5563; }
 .placement-LOW { background-color: #ca8a04; }
 .placement-BTM2 { background-color: #d97706; }
+.placement-BTM { background-color: #d97706; }
 .placement-ELIM { background-color: #be123c; color: white; font-weight: bold; }
 .placement-WINNER { background: linear-gradient(45deg, #fde047, #fbbf24); color: black; font-weight: bold; }
 .placement-RUNNER-UP { background: linear-gradient(45deg, #e5e7eb, #9ca3af); color: black; font-weight: bold; }
 .track-record-pill { display: inline-block; padding: 0.1rem 0.5rem; font-size: 0.7rem; font-weight: bold; border-radius: 9999px; color: white; }
-
