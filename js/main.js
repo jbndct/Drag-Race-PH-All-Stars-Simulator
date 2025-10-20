@@ -113,13 +113,19 @@ function startCompetition() {
 
 function runEpisode() {
     episodePhase = 'performance';
-    // FIX: Use modulo operator to loop through challenges if the season is longer than the number of challenges.
     const challenge = shuffledChallenges[(episodeNumber - 1) % shuffledChallenges.length];
 
     finalScores = currentCast.map(q => {
-        const perfScore = (q.stats[challenge.primaryStat] * 5) + (Math.random() * 50);
-        const runwayScore = (q.stats.runway * 5) + (Math.random() * 50);
-        const totalScore = (perfScore * 0.75) + (runwayScore * 0.25);
+        // --- NEW: More Randomness & Lip Sync Fatigue ---
+        const lipsyncCount = q.trackRecord.filter(p => p === 'BTM' || p === 'BTM2').length;
+        const fatiguePenalty = lipsyncCount * 5; // Penalty for each previous time in the bottom
+        
+        const perfScore = (q.stats[challenge.primaryStat] * 5) + (Math.random() * 65); // Increased randomness
+        const runwayScore = (q.stats.runway * 5) + (Math.random() * 65); // Increased randomness
+        
+        let totalScore = (perfScore * 0.75) + (runwayScore * 0.25);
+        totalScore -= fatiguePenalty; // Apply fatigue penalty
+
         return { queen: q, totalScore, perfScore, runwayScore, critiques: {} };
     }).sort((a, b) => b.totalScore - a.totalScore);
 
@@ -175,12 +181,10 @@ function runJudgingPhase() {
 }
 
 function runLipSyncPhase() {
-    // FIX: Immediately set the episode phase to prevent the double-click bug.
     episodePhase = 'lipsync';
     ui.switchView(simulationView, bodyContainer, episodePhase);
 
     if (gameMode === 'standard') {
-        // Standard Mode Logic...
         eliminatedQueens = [];
         const bottomQueens = episodeResults.placements.filter(r => r.placement === 'BTM');
         episodeResults.lipSyncSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
@@ -195,34 +199,60 @@ function runLipSyncPhase() {
         }
 
         const [q1Result, q2Result] = bottomQueens.map(p => finalScores.find(s => s.queen.id === p.queen.id));
-        const q1Score = q1Result.queen.stats.lipsync * 10 + Math.random() * 15;
-        const q2Score = q2Result.queen.stats.lipsync * 10 + Math.random() * 15;
+        
+        // --- NEW: Overhauled Lip Sync Logic ---
+        const q1Score = q1Result.queen.stats.lipsync * 10 + Math.random() * 25; 
+        const q2Score = q2Result.queen.stats.lipsync * 10 + Math.random() * 25;
 
-        if (doubleSashayCount < 1 && q1Score < 25 && q2Score < 25 && Math.random() < 0.1) {
+        // Double Sashay logic (less likely now but possible for two very bad performances)
+        if (doubleSashayCount < 1 && q1Score < 30 && q2Score < 30 && Math.random() < 0.1) {
             eliminatedQueens = [q1Result.queen, q2Result.queen];
             doubleSashayCount++;
             episodeResults.placements.find(p => p.queen.id === q1Result.queen.id).placement = 'ELIM';
             episodeResults.placements.find(p => p.queen.id === q2Result.queen.id).placement = 'ELIM';
-        } else if (doubleShantayCount < 2 && (q1Score > 80 && q2Score > 80) && Math.random() < 0.2) {
+        } else if (doubleShantayCount < 2 && (q1Score > 95 && q2Score > 95) && Math.random() < 0.2) { // Double shantay requires exceptional performance
             doubleShantayCount++;
             episodeResults.placements.find(p => p.queen.id === q1Result.queen.id).placement = 'BTM2';
             episodeResults.placements.find(p => p.queen.id === q2Result.queen.id).placement = 'BTM2';
         } else {
-            const winner = q1Score >= q2Score ? q1Result : q2Result;
-            const loser = q1Score < q2Score ? q1Result : q2Result;
+            const q1LipSyncs = q1Result.queen.trackRecord.filter(p => p === 'BTM' || p === 'BTM2').length;
+            const q2LipSyncs = q2Result.queen.trackRecord.filter(p => p === 'BTM' || p === 'BTM2').length;
+            const q1TrackRecordScore = calculateTrackRecordScore(q1Result.queen);
+            const q2TrackRecordScore = calculateTrackRecordScore(q2Result.queen);
+
+            // Weighted score: performance + track record bonus - repeat offender penalty
+            const finalLipSyncScore1 = (q1Score * 1.0) + (q1TrackRecordScore * 0.5) - (q1LipSyncs * 15);
+            const finalLipSyncScore2 = (q2Score * 1.0) + (q2TrackRecordScore * 0.5) - (q2LipSyncs * 15);
+
+            let winner, loser;
+
+            // "Judges' Fatigue" rule for repeat lip-syncers
+            if (q1LipSyncs >= 2 && finalLipSyncScore2 > finalLipSyncScore1) {
+                winner = q2Result; loser = q1Result;
+            } else if (q2LipSyncs >= 2 && finalLipSyncScore1 > finalLipSyncScore2) {
+                winner = q1Result; loser = q2Result;
+            } else if (q1LipSyncs >= 2 && finalLipSyncScore1 > finalLipSyncScore2 && (finalLipSyncScore1 - finalLipSyncScore2 < 20)) {
+                // If a queen on her 3rd+ lip sync only wins by a small margin, she still goes home
+                winner = q2Result; loser = q1Result;
+            } else if (q2LipSyncs >= 2 && finalLipSyncScore2 > finalLipSyncScore1 && (finalLipSyncScore2 - finalLipSyncScore1 < 20)) {
+                winner = q1Result; loser = q2Result;
+            } else {
+                // Otherwise, the queen with the higher weighted score wins
+                winner = finalLipSyncScore1 >= finalLipSyncScore2 ? q1Result : q2Result;
+                loser = finalLipSyncScore1 < finalLipSyncScore2 ? q1Result : q2Result;
+            }
+
             eliminatedQueens.push(loser.queen);
             episodeResults.placements.find(p => p.queen.id === winner.queen.id).placement = 'BTM2';
             episodeResults.placements.find(p => p.queen.id === loser.queen.id).placement = 'ELIM';
         }
         handlePostLipSync();
     } else {
-        // Mama Pao Mode will have its decisions made, now we just show the result.
         handlePostLipSync();
     }
 }
 
 function handlePostLipSync() {
-    // UI CALL: Display the results of the lip sync.
     ui.displayLipSyncResults(episodeResults, eliminatedQueens, phaseSubheader, resultsContainer);
     ui.updateAdvanceButton('View Track Record', advanceButton, restartButton);
 }
@@ -231,12 +261,9 @@ function runTrackRecordPhase() {
     episodePhase = 'trackRecord';
     ui.switchView(simulationView, bodyContainer, episodePhase);
 
-    currentCast.forEach(q => {
-        if (!episodeResults.placements.some(p => p.queen.id === q.id)) {
-            episodeResults.placements.push({ queen: q, placement: 'SAFE' });
-        }
-    });
+    // FIX: Re-ordered logic to prevent "ghost" queens in Mama Pao mode.
 
+    // 1. First, apply all placements from this episode (WIN, HIGH, LOW, BTM, ELIM) to the persistent `fullCast`.
     episodeResults.placements.forEach(p => {
         const queenInFullCast = fullCast.find(q => q.id === p.queen.id);
         if (queenInFullCast) {
@@ -244,6 +271,7 @@ function runTrackRecordPhase() {
         }
     });
 
+    // 2. Now, officially eliminate queens and filter `currentCast` so it's accurate for the next step.
     if (eliminatedQueens.length > 0) {
         eliminatedQueens.forEach(elimQueen => {
             const elimQueenInFullCast = fullCast.find(q => q.id === elimQueen.id);
@@ -255,7 +283,16 @@ function runTrackRecordPhase() {
         currentCast = currentCast.filter(q => !eliminatedQueens.some(eq => eq.id === q.id));
     }
     
-    // UI CALL: Display the track record table.
+    // 3. Finally, iterate through the *correctly filtered* `currentCast`. Any queen still here
+    //    who doesn't have a placement for this episode must be SAFE.
+    currentCast.forEach(q => {
+        const queenInFullCast = fullCast.find(fq => fq.id === q.id);
+        if (queenInFullCast && !queenInFullCast.trackRecord[episodeNumber - 1]) {
+            queenInFullCast.trackRecord[episodeNumber - 1] = 'SAFE';
+        }
+    });
+
+    // Display the results with the now-correct data.
     ui.displayTrackRecord(fullCast, shuffledChallenges, resultsContainer, calculateTrackRecordScore);
     const buttonText = currentCast.length <= 4 ? 'Start The Finale!' : 'Next Episode';
     ui.updateAdvanceButton(buttonText, advanceButton, restartButton);
@@ -280,7 +317,6 @@ function runFinalePerformancePhase() {
     if (gameMode === 'standard') {
         ui.updateAdvanceButton('See The Top 2', advanceButton, restartButton);
     } else {
-        // UI CALL: Ask user to pick the Top 2. Will call `handleTop2Selection`.
         ui.promptForTop2(episodeResults.finalePerformance, phaseSubheader, resultsContainer, advanceButton, handleTop2Selection, calculateTrackRecordScore);
     }
 }
@@ -295,7 +331,6 @@ function runFinaleTop2Phase() {
         const maxTrackRecord = Math.max(...currentCast.map(q => calculateTrackRecordScore(q)));
         const normalizedTrack = maxTrackRecord > 0 ? (trackRecordScore / maxTrackRecord) * 100 : 0;
         
-        // Change weighting to 70% track record, 30% final performance.
         const totalScore = (normalizedTrack * 0.7) + (normalizedPerf * 0.3);
         
         return { queen, totalScore, trackRecordScore };
@@ -304,7 +339,6 @@ function runFinaleTop2Phase() {
     top2 = [finaleScores[0], finaleScores[1]];
     const eliminated = currentCast.filter(q => !top2.some(t => t.queen.id === q.id));
     
-    // Update the track record for the eliminated finalists.
     eliminated.forEach(elimQueen => {
         const queenInFullCast = fullCast.find(q => q.id === elimQueen.id);
         if (queenInFullCast) {
@@ -314,7 +348,6 @@ function runFinaleTop2Phase() {
         }
     });
 
-    // UI CALL: Display the Top 2 results.
     ui.displayTop2Results(top2, eliminated, resultsContainer);
     ui.updateAdvanceButton('Lip Sync For The Crown!', advanceButton, restartButton);
 }
@@ -333,7 +366,6 @@ function runLipsyncForTheCrownPhase() {
         const [q1, q2] = top2.map(t => t.queen);
         const score1 = q1.stats.lipsync * 10 + Math.random() * 25;
         const score2 = q2.stats.lipsync * 10 + Math.random() * 25;
-        // UI CALL: Ask user to crown the winner. Will call `handleWinnerCrowning`.
         ui.promptForWinnerCrown(q1, q2, score1, score2, phaseSubheader, resultsContainer, advanceButton, handleWinnerCrowning, calculateTrackRecordScore);
     }
 }
@@ -344,10 +376,8 @@ function handleWinnerCrowning(winner, runnerUp) {
     if (winnerInFull) winnerInFull.trackRecord.push('WINNER');
     if (runnerUpInFull) runnerUpInFull.trackRecord.push('RUNNER-UP');
 
-    // UI CALL: Display the final winner.
     ui.displayWinner(winner, runnerUp, resultsContainer);
     ui.showRestartButton(advanceButton, restartButton, () => {
-        // Pass 'true' to indicate this is the final, non-blurry view.
         ui.displayTrackRecord(fullCast, shuffledChallenges, resultsContainer, calculateTrackRecordScore, true);
     });
 }
@@ -363,7 +393,6 @@ function handleWinnerSelection(winnerId) {
         const placement = s.queen.id === winnerId ? 'WIN' : 'HIGH';
         episodeResults.placements.push({ queen: s.queen, placement });
     });
-    // UI CALL: Now ask user to save a queen from the bottom. Will call `handleBottomSelection`.
     ui.promptForBottoms(finalScores, phaseSubheader, resultsContainer, handleBottomSelection);
 }
 
@@ -372,7 +401,6 @@ function handleBottomSelection(safeId) {
         const placement = s.queen.id === safeId ? 'LOW' : 'BTM';
         episodeResults.placements.push({ queen: s.queen, placement });
     });
-    // UI CALL: Now ask user to decide the lip sync. Will call `handleLipSyncDecision`.
     ui.promptForLipSyncWinner(episodeResults, finalScores, fullCast, phaseSubheader, resultsContainer, advanceButton, handleLipSyncDecision);
 }
 
@@ -388,11 +416,10 @@ function handleLipSyncDecision(decision) {
             if (p.queen.id === decision.loser.id) p.placement = 'ELIM';
         }
     });
-    runLipSyncPhase(); // Go to the lip sync phase to display results
+    runLipSyncPhase();
 }
 
 function handleTop2Selection(selectedIds) {
-    // This function is the callback for when the user picks their Top 2
     episodePhase = 'finaleTop2'; 
 
     top2 = currentCast
@@ -400,7 +427,6 @@ function handleTop2Selection(selectedIds) {
         .map(queen => ({ queen, trackRecordScore: calculateTrackRecordScore(queen) }));
     const eliminated = currentCast.filter(q => !selectedIds.includes(q.id));
     
-    // Update the track record for the eliminated finalists.
     eliminated.forEach(elimQueen => {
         const queenInFullCast = fullCast.find(q => q.id === elimQueen.id);
         if (queenInFullCast) {
@@ -410,7 +436,6 @@ function handleTop2Selection(selectedIds) {
         }
     });
 
-    // UI CALL: Display the selected Top 2.
     ui.displayTop2Results(top2, eliminated, resultsContainer);
     ui.updateAdvanceButton('Lip Sync For The Crown!', advanceButton, restartButton);
 }
@@ -421,19 +446,12 @@ function handleTop2Selection(selectedIds) {
 // =================================================================================
 
 window.addEventListener('load', () => {
-    // Event Listeners for mode selection
     standardModeBtn.addEventListener('click', () => selectMode('standard'));
     mamapaoModeBtn.addEventListener('click', () => selectMode('mamapao'));
-
-    // UI CALL: Create the initial grid of queens on the selection screen.
     ui.populateQueenGrid(queens, queenGrid, toggleQueenSelection);
-
-    // Event Listeners for starting and progressing the game
     startButton.addEventListener('click', () => { if (!startButton.disabled) startCompetition(); });
     advanceButton.addEventListener('click', advanceEpisode);
     restartButton.addEventListener('click', () => window.location.reload());
-
-    // Initial UI setup
     ui.updateSelectionUI(selectedCast, castList, castPlaceholder, castCounter, startButton, instructions, MIN_CAST_SIZE, MAX_CAST_SIZE);
     ui.switchView(menuView, bodyContainer, episodePhase);
 });
