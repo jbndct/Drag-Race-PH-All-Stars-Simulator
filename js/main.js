@@ -144,6 +144,7 @@ function advanceEpisode() {
         case 'trackRecord':
             if (currentCast.length <= 4) {
                 episodePhase = 'finale';
+                episodeNumber++; // <<<----- THE FIX IS HERE
                 runFinalePerformancePhase();
             } else {
                 episodeNumber++;
@@ -289,14 +290,17 @@ function runFinaleTop2Phase() {
         const normalizedPerf = (perfScore / maxPerfScore) * 100;
         const maxTrackRecord = Math.max(...currentCast.map(q => calculateTrackRecordScore(q)));
         const normalizedTrack = maxTrackRecord > 0 ? (trackRecordScore / maxTrackRecord) * 100 : 0;
-        const totalScore = (normalizedTrack * 0.5) + (normalizedPerf * 0.5);
+        
+        // Change weighting to 70% track record, 30% final performance.
+        const totalScore = (normalizedTrack * 0.7) + (normalizedPerf * 0.3);
+        
         return { queen, totalScore, trackRecordScore };
     }).sort((a, b) => b.totalScore - a.totalScore);
 
     top2 = [finaleScores[0], finaleScores[1]];
     const eliminated = currentCast.filter(q => !top2.some(t => t.queen.id === q.id));
     
-    // FIX: Update the track record for the eliminated finalists.
+    // Update the track record for the eliminated finalists.
     eliminated.forEach(elimQueen => {
         const queenInFullCast = fullCast.find(q => q.id === elimQueen.id);
         if (queenInFullCast) {
@@ -339,7 +343,7 @@ function handleWinnerCrowning(winner, runnerUp) {
     // UI CALL: Display the final winner.
     ui.displayWinner(winner, runnerUp, resultsContainer);
     ui.showRestartButton(advanceButton, restartButton, () => {
-        // FIX: Pass 'true' to indicate this is the final view.
+        // Pass 'true' to indicate this is the final, non-blurry view.
         ui.displayTrackRecord(fullCast, shuffledChallenges, resultsContainer, calculateTrackRecordScore, true);
     });
 }
@@ -389,7 +393,7 @@ function handleTop2Selection(selectedIds) {
         .map(queen => ({ queen, trackRecordScore: calculateTrackRecordScore(queen) }));
     const eliminated = currentCast.filter(q => !selectedIds.includes(q.id));
     
-    // FIX: Update the track record for the eliminated finalists.
+    // Update the track record for the eliminated finalists.
     eliminated.forEach(elimQueen => {
         const queenInFullCast = fullCast.find(q => q.id === elimQueen.id);
         if (queenInFullCast) {
