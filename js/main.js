@@ -113,7 +113,8 @@ function startCompetition() {
 
 function runEpisode() {
     episodePhase = 'performance';
-    const challenge = shuffledChallenges[episodeNumber - 1];
+    // FIX: Use modulo operator to loop through challenges if the season is longer than the number of challenges.
+    const challenge = shuffledChallenges[(episodeNumber - 1) % shuffledChallenges.length];
 
     finalScores = currentCast.map(q => {
         const perfScore = (q.stats[challenge.primaryStat] * 5) + (Math.random() * 50);
@@ -138,7 +139,7 @@ function advanceEpisode() {
     switch (episodePhase) {
         case 'performance': runJudgingPhase(); break;
         case 'placements':
-            runLipSyncPhase(); // Simplified: Mama Pao mode will also follow this path initially
+            runLipSyncPhase(); 
             break;
         case 'lipsync': runTrackRecordPhase(); break;
         case 'trackRecord':
@@ -152,7 +153,6 @@ function advanceEpisode() {
             }
             break;
         case 'finale': 
-            // This case is now only for Standard Mode. Mama Pao mode skips this.
             runFinaleTop2Phase(); 
             break;
         case 'finaleTop2': runLipsyncForTheCrownPhase(); break;
@@ -175,6 +175,7 @@ function runJudgingPhase() {
 }
 
 function runLipSyncPhase() {
+    // FIX: Immediately set the episode phase to prevent the double-click bug.
     episodePhase = 'lipsync';
     ui.switchView(simulationView, bodyContainer, episodePhase);
 
@@ -392,7 +393,7 @@ function handleLipSyncDecision(decision) {
 
 function handleTop2Selection(selectedIds) {
     // This function is the callback for when the user picks their Top 2
-    episodePhase = 'finaleTop2'; // <<<----- THE FIX IS HERE
+    episodePhase = 'finaleTop2'; 
 
     top2 = currentCast
         .filter(q => selectedIds.includes(q.id))
