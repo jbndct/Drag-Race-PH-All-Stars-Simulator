@@ -20,7 +20,7 @@ export const queens = [
     { id: 'prince', name: 'Prince', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/ec/PrinceDRP1MiniPromo.jpg', stats: { runway: 7, comedy: 5, acting: 6, dance: 6, design: 5, lipsync: 6 } },
     { id: 'turing', name: 'Turing', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1e/TuringDRP1MiniPromo.jpg', stats: { runway: 5, comedy: 7, acting: 8, dance: 9, design: 6, lipsync: 10 } },
     { id: 'vinas_deluxe', name: 'Viñas DeLuxe', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/64/Vi%C3%B1asDeLuxeDRPHSR1CastMug.jpg', stats: { runway: 8, comedy: 10, acting: 8, dance: 7, design: 7, lipsync: 9 } },
-    { id: 'xilhouete', name: 'Xilhouete', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2e/XilhoueteDRP1MiniPromo.jpg', stats: { runway: 9, comedy: 8, acting: 8, dance: 7, design: 9, lipsync: 8 } },
+    { id: 'xilhouete', name: 'Xilhouete', season: 1, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2e/XilhoueteDRP1MiniPromo.jpg', stats: { runway: 8, comedy: 8, acting: 8, dance: 6, design: 8, lipsync: 7 } },
 
     // Drag Race PH Season 2
     { id: 'arizona_brandy', name: 'Arizona Brandy', season: 2, image: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/95/ArizonaBrandyDRPHSR1CastMug.jpg', stats: { runway: 8, comedy: 10, acting: 9, dance: 7, design: 6, lipsync: 9 } },
