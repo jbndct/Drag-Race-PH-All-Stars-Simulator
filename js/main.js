@@ -144,14 +144,17 @@ function advanceEpisode() {
         case 'trackRecord':
             if (currentCast.length <= 4) {
                 episodePhase = 'finale';
-                episodeNumber++; // <<<----- THE FIX IS HERE
+                episodeNumber++; 
                 runFinalePerformancePhase();
             } else {
                 episodeNumber++;
                 runEpisode();
             }
             break;
-        case 'finale': runFinaleTop2Phase(); break;
+        case 'finale': 
+            // This case is now only for Standard Mode. Mama Pao mode skips this.
+            runFinaleTop2Phase(); 
+            break;
         case 'finaleTop2': runLipsyncForTheCrownPhase(); break;
     }
 }
@@ -388,6 +391,9 @@ function handleLipSyncDecision(decision) {
 }
 
 function handleTop2Selection(selectedIds) {
+    // This function is the callback for when the user picks their Top 2
+    episodePhase = 'finaleTop2'; // <<<----- THE FIX IS HERE
+
     top2 = currentCast
         .filter(q => selectedIds.includes(q.id))
         .map(queen => ({ queen, trackRecordScore: calculateTrackRecordScore(queen) }));
