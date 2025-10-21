@@ -12,6 +12,8 @@ export function populateQueenGrid(queens, queenGrid, onQueenClick) {
             currentSeason = q.season;
             const header = document.createElement('div');
             header.className = 'col-span-full text-center text-pink-400 font-display text-2xl py-2 tracking-widest';
+
+            // NEW: Determine the correct title for the season/group
             let seasonTitle = '';
             if (currentSeason === 101) seasonTitle = 'Drag Den S1';
             else if (currentSeason === 102) seasonTitle = 'Drag Den S2';
@@ -20,6 +22,8 @@ export function populateQueenGrid(queens, queenGrid, onQueenClick) {
             header.textContent = seasonTitle;
             queenGrid.appendChild(header);
         }
+
+        // Create the queen card
         const card = document.createElement('div');
         card.className = 'queen-card bg-gray-800/80 rounded-lg p-2 text-center cursor-pointer border-2 border-transparent';
         card.dataset.id = q.id;
@@ -34,9 +38,13 @@ export function switchView(viewToShow, bodyContainer, episodePhase) {
         const view = document.getElementById(id);
         if (view) view.classList.add('hidden', 'opacity-0');
     });
+
+    // Show the target view with a fade-in effect
     viewToShow.classList.remove('hidden');
     setTimeout(() => viewToShow.classList.remove('opacity-0'), 50);
-    let bg = 'var(--bg-image-selection)';
+
+    // Update background image based on the view and phase
+    let bg = 'var(--bg-image-selection)'; // Default background
     if (viewToShow.id === 'simulation-view') {
         const phaseToBg = {
             'performance': 'var(--bg-image-challenge)',
@@ -52,6 +60,17 @@ export function switchView(viewToShow, bodyContainer, episodePhase) {
     bodyContainer.style.backgroundImage = bg;
 }
 
+/**
+ * Updates the UI for the queen selection screen.
+ * @param {Array<object>} selectedCast - Array of currently selected queens.
+ * @param {HTMLElement} castList - The container for selected queen items.
+ * @param {HTMLElement} castPlaceholder - The placeholder text when cast is empty.
+ * @param {HTMLElement} castCounter - The element showing the count of selected queens.
+ * @param {HTMLElement} startButton - The button to start the competition.
+ * @param {HTMLElement} instructions - The text element for user guidance.
+ * @param {number} MIN_CAST_SIZE - The minimum number of queens required.
+ * @param {number} MAX_CAST_SIZE - The maximum number of queens allowed.
+ */
 export function updateSelectionUI(selectedCast, castList, castPlaceholder, castCounter, startButton, instructions, MIN_CAST_SIZE, MAX_CAST_SIZE) {
     castList.innerHTML = '';
     castPlaceholder.style.display = selectedCast.length === 0 ? 'block' : 'none';
@@ -68,11 +87,23 @@ export function updateSelectionUI(selectedCast, castList, castPlaceholder, castC
     document.querySelectorAll('.queen-card').forEach(c => c.classList.toggle('selected', selectedCast.some(q => q.id === c.dataset.id)));
 }
 
+/**
+ * Displays the main episode header and intro text.
+ * @param {number} episodeNumber - The current episode number.
+ * @param {object} challenge - The current challenge object.
+ * @param {HTMLElement} episodeHeader - The h1 element for the episode title.
+ * @param {HTMLElement} phaseSubheader - The p element for the phase description.
+ */
 export function displayEpisodeHeader(episodeNumber, challenge, episodeHeader, phaseSubheader) {
     episodeHeader.textContent = `Episode ${episodeNumber}: ${challenge.name}`;
     phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">${challenge.intro}</p>`;
 }
 
+/**
+ * Renders the performance and runway critiques for all queens.
+ * @param {Array<object>} scores - The sorted array of queens with their scores and critiques.
+ * @param {HTMLElement} resultsContainer - The main container for simulation results.
+ */
 export function displayAllCritiques(scores, resultsContainer) {
     const runwayThemes = ["Filipiniana Extravaganza", "Pearls & Perlas", "Mythical Creatures", "Jeepney Realness", "Divas of the Decades", "Horror-scope", "Terno-dactyl", "Flower Power", "Miss Universe Couture", "Intergalactic Drag", "Aswang Chic"];
     const theme = runwayThemes[Math.floor(Math.random() * runwayThemes.length)];
@@ -93,6 +124,12 @@ export function displayAllCritiques(scores, resultsContainer) {
     resultsContainer.innerHTML = html;
 }
 
+/**
+ * Displays the placements (WIN, HIGH, BTM, etc.) for the episode.
+ * @param {Array<object>} placements - The array of queens and their placements.
+ * @param {HTMLElement} phaseSubheader - The subheader element.
+ * @param {HTMLElement} resultsContainer - The main container for results.
+ */
 export function displayPlacements(placements, phaseSubheader, resultsContainer) {
     phaseSubheader.textContent = "The Judges have made their decisions...";
     const placementOrder = { 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM': 4, 'BTM2': 4, 'ELIM': 5 };
@@ -111,31 +148,51 @@ export function displayPlacements(placements, phaseSubheader, resultsContainer) 
     resultsContainer.innerHTML = `<div class="text-center mb-4"><p class="text-lg italic text-gray-300">After careful deliberation...</p></div>` + html + `</div>`;
 }
 
+/**
+ * Displays the results of the Lip Sync For Your Life.
+ * @param {object} episodeResults - The results object for the current episode.
+ * @param {Array<object>} eliminatedQueens - An array of queens eliminated in the lip sync.
+ * @param {HTMLElement} phaseSubheader - The subheader element.
+ * @param {HTMLElement} resultsContainer - The main container for results.
+ */
 export function displayLipSyncResults(episodeResults, eliminatedQueens, phaseSubheader, resultsContainer) {
     phaseSubheader.textContent = "Lip Sync For Your Life!";
     const lipSyncers = episodeResults.placements.filter(p => ['BTM2', 'ELIM'].includes(p.placement)).map(p => p.queen);
     const song = episodeResults.lipSyncSong || "an epic ballad";
+
+    // Double Sashay
     if (eliminatedQueens.length === 2) {
         resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The queens performed ${song}, but failed to impress...</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${eliminatedQueens[0].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img" alt="${eliminatedQueens[0].name}"><p class="font-bold text-xl mt-2">${eliminatedQueens[0].name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="${eliminatedQueens[1].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img" alt="${eliminatedQueens[1].name}"><p class="font-bold text-xl mt-2">${eliminatedQueens[1].name}</p></div></div><p class="text-gray-300 italic text-lg">"I'm sorry my dears, but it's a no from me."</p><p class="font-display text-3xl mt-2 text-red-400">Both of you, sashay away.</p></div>`;
         return;
     }
+
+    // Double Shantay
     if (eliminatedQueens.length === 0 && lipSyncers.length === 2) {
         resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The queens performed ${song} and set the stage on fire!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${lipSyncers[0].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 object-cover placement-WIN-img" alt="${lipSyncers[0].name}"><p class="font-bold text-xl mt-2">${lipSyncers[0].name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="${lipSyncers[1].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 object-cover placement-WIN-img" alt="${lipSyncers[1].name}"><p class="font-bold text-xl mt-2">${lipSyncers[1].name}</p></div></div><p class="text-gray-300 italic text-lg">"You are both winners, baby!"</p><p class="font-display text-4xl text-green-400 pt-4">Condragulations, shantay you BOTH stay.</p></div>`;
         return;
     }
     const loser = eliminatedQueens[0];
-    const winner = lipSyncers.find(q => q && loser && q.id !== loser.id);
-    if (!winner || !loser) {
-        const queenToShow = loser || winner || lipSyncers[0];
-        if (queenToShow) {
-             resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">A FATEFUL DECISION</h2><p class="text-lg">There is no lip sync this week.</p><p class="text-gray-300 italic text-lg">The judges have decided that one queen's time has come to an end.</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${queenToShow.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img" alt="${queenToShow.name}"><p class="font-bold text-xl mt-2">${queenToShow.name}</p></div></div><p class="font-display text-3xl mt-2 text-red-400">${queenToShow.name}, sashay away.</p></div>`;
-        }
+    const winner = lipSyncers.find(q => q.id !== loser?.id);
+
+    // No Lip Sync (e.g., a queen quits or is disqualified)
+    if (!winner) {
+        resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">A FATEFUL DECISION</h2><p class="text-lg">Due to the results of the challenge, there is no lip sync this week.</p><p class="text-gray-300 italic text-lg">The judges have decided that one queen's time has come to an end.</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${loser.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img" alt="${loser.name}"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`;
         return;
     }
+
+    // Standard Lip Sync
     let narrative = `Both queens gave it their all, but ${winner.name}'s passion and precision on stage gave her the edge. She truly embodied the spirit of the song.`;
     resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The bottom two queens must perform ${song}!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${winner.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 object-cover placement-WIN-img" alt="${winner.name}"><p class="font-bold text-xl mt-2">${winner.name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="${loser.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img" alt="${loser.name}"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="text-gray-300 italic text-lg">"${narrative}"</p><p class="font-display text-4xl text-green-400 pt-4">Shantay, you stay, ${winner.name}.</p><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`;
 }
 
+/**
+ * Displays the season track record table.
+ * @param {Array<object>} fullCast - The complete cast with their updated track records.
+ * @param {Array<object>} shuffledChallenges - The array of challenges for the season.
+ * @param {HTMLElement} resultsContainer - The main container for results.
+ * @param {Function} calculateTrackRecordScore - The function from main.js to calculate scores.
+ * @param {boolean} [isFinalView=false] - Flag to indicate if this is the final track record view.
+ */
 export function displayTrackRecord(fullCast, shuffledChallenges, resultsContainer, calculateTrackRecordScore, isFinalView = false) {
     const comprehensivePlacementOrder = { 'WINNER': 0, 'RUNNER-UP': 1, 'WIN': 2, 'HIGH': 3, 'SAFE': 4, 'LOW': 5, 'BTM2': 6, 'BTM': 6, 'ELIM': 7 };
     const sortedCast = [...fullCast].sort((a, b) => {
@@ -167,20 +224,45 @@ export function displayTrackRecord(fullCast, shuffledChallenges, resultsContaine
     resultsContainer.innerHTML = tableHTML;
 }
 
+/**
+ * Displays the final top 2 queens and the eliminated finalists.
+ * @param {Array<object>} top2 - An array containing the two top queens.
+ * @param {Array<object>} eliminated - An array containing the eliminated finalists.
+ * @param {HTMLElement} resultsContainer - The main container for results.
+ */
 export function displayTop2Results(top2, eliminated, resultsContainer) {
     resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-2xl mx-auto"><p class="text-2xl font-display tracking-widest">Based on the final performance and season-long track record, the Top 2 queens are...</p><div class="p-4 rounded-lg bg-green-900/50 text-3xl font-display tracking-widest flex items-center justify-center gap-4"><img src="${top2[0].queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${top2[0].queen.name}">${top2[0].queen.name}</div><div class="p-4 rounded-lg bg-green-900/50 text-3xl font-display tracking-widest flex items-center justify-center gap-4"><img src="${top2[1].queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${top2[1].queen.name}">${top2[1].queen.name}</div><p class="text-xl pt-4">This means, ${eliminated.map(q => q.name).join(' and ')}, I'm sorry my dears but this is not your time. Sashay away.</p></div>`;
 }
 
+/**
+ * Displays the winner and runner-up of the season.
+ * @param {object} winner - The winning queen object.
+ * @param {object} runnerUp - The runner-up queen object.
+ * @param {HTMLElement} resultsContainer - The main container for results.
+ */
 export function displayWinner(winner, runnerUp, resultsContainer) {
     resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-2xl mx-auto"><p class="text-2xl font-display tracking-widest">Ladies, the decision is final...</p><p class="text-3xl font-display tracking-widest">The next Drag Race Philippines Superstar is...</p><div class="py-8"><img src="${winner.image}" class="w-48 h-48 rounded-full object-cover mx-auto border-8 border-amber-400 placement-WIN-img" alt="${winner.name}"><p class="text-7xl md:text-8xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse mt-4">${winner.name}</p></div><p class="text-3xl font-display tracking-widest">Condragulations, you're a winner, baby!</p><p class="text-xl pt-4">And to our runner-up, ${runnerUp.name}, you are and will always be a star. Now, prance, my queen!</p></div>`;
 }
 
+/**
+ * Updates the state and appearance of the main advance/restart buttons.
+ * @param {string} text - The text to display on the advance button.
+ * @param {HTMLElement} advanceButton - The advance button element.
+ * @param {HTMLElement} restartButton - The restart button element.
+ * @param {boolean} [hide=false] - Whether to hide the advance button.
+ */
 export function updateAdvanceButton(text, advanceButton, restartButton, hide = false) {
     advanceButton.textContent = text;
     advanceButton.classList.toggle('hidden', hide);
     if (!hide) restartButton.classList.add('hidden');
 }
 
+/**
+ * Shows the final restart button and handles the final track record view.
+ * @param {HTMLElement} advanceButton - The advance button element.
+ * @param {HTMLElement} restartButton - The restart button element.
+ * @param {Function} onFinalRecordClick - Callback to display the final track record.
+ */
 export function showRestartButton(advanceButton, restartButton, onFinalRecordClick) {
     advanceButton.textContent = 'View Final Track Record';
     advanceButton.classList.remove('hidden');
@@ -196,104 +278,18 @@ export function showRestartButton(advanceButton, restartButton, onFinalRecordCli
 // MAMA PAO MODE - UI PROMPTS
 // =================================================================================
 
-function generateStarRating(score) {
-    const rating = Math.max(0, Math.min(5, score / 20));
-    let stars = '';
-    for (let i = 1; i <= 5; i++) {
-        const starClass = rating >= i ? 'text-yellow-400' : 'text-gray-600';
-        stars += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 ${starClass}"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.007z" clip-rule="evenodd" /></svg>`;
-    }
-    return `<div class="flex">${stars}</div>`;
-}
-
-export function promptForCustomPlacements(scores, phaseSubheader, resultsContainer, advanceButton, onPlacementsSelected, castSize) {
-    let selectedTops = [];
-    let selectedBottoms = [];
-    let selectionPhase = 'tops';
-    const topsToSelect = castSize > 5 ? 3 : 2;
-    const bottomsToSelect = castSize > 5 ? 3 : 2;
-
-    const render = () => {
-        const topsNeeded = topsToSelect - selectedTops.length;
-        const bottomsNeeded = bottomsToSelect - selectedBottoms.length;
-        let headerText = '';
-        let confirmButtonHTML = '';
-
-        if (selectionPhase === 'tops') {
-            headerText = `Select Your Tops (${topsNeeded} remaining)`;
-            if (topsNeeded === 0) confirmButtonHTML = `<div class="text-center mt-6"><button id="confirm-btn" class="main-button px-8 py-3 rounded-lg text-xl font-display tracking-widest">Confirm Tops</button></div>`;
-        } else {
-            headerText = `Select Your Bottoms (${bottomsNeeded} remaining)`;
-            if (bottomsNeeded === 0) confirmButtonHTML = `<div class="text-center mt-6"><button id="confirm-btn" class="main-button px-8 py-3 rounded-lg text-xl font-display tracking-widest">Confirm Placements</button></div>`;
-        }
-        phaseSubheader.textContent = "You're the judge! Choose who soared and who flopped.";
-        let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">${headerText}</h3></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">`;
-        scores.forEach(s => {
-            const isTop = selectedTops.includes(s.queen.id);
-            const isBottom = selectedBottoms.includes(s.queen.id);
-            let cardClass = 'custom-placement-card';
-            let isDisabled = false;
-
-            if (isTop) cardClass += ' selected-top';
-            if (isBottom) cardClass += ' selected-bottom';
-            
-            if (selectionPhase === 'bottoms' && isTop) {
-                isDisabled = true;
-                cardClass += ' dimmed'; // FIX: Add dimmed class
-            } else if (selectionPhase === 'tops' && selectedTops.length >= topsToSelect && !isTop) {
-                isDisabled = true;
-            } else if (selectionPhase === 'bottoms' && selectedBottoms.length >= bottomsToSelect && !isBottom) {
-                isDisabled = true;
-            }
-            
-            html += `<button class="secondary-button text-left p-3 rounded-lg flex flex-col items-center h-full ${cardClass}" data-queen-id="${s.queen.id}" ${isDisabled ? 'disabled' : ''}><img src="${s.queen.image}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 object-cover flex-shrink-0" alt="${s.queen.name}"><p class="font-bold text-md mt-2 text-center flex-shrink-0">${s.queen.name}</p><div class="text-xs mt-2 text-left w-full space-y-1"><div><p class="font-semibold text-blue-400">Challenge:</p>${generateStarRating(s.perfScore)}</div><div><p class="font-semibold text-pink-400">Runway:</p>${generateStarRating(s.runwayScore)}</div></div></button>`;
-        });
-        html += `</div>${confirmButtonHTML}`;
-        resultsContainer.innerHTML = html;
-        addEventListeners();
-    };
-
-    const addEventListeners = () => {
-        document.querySelectorAll('.custom-placement-card').forEach(card => {
-            card.addEventListener('click', e => {
-                const queenId = e.currentTarget.dataset.queenId;
-                if (selectionPhase === 'tops') {
-                    if (selectedTops.includes(queenId)) selectedTops = selectedTops.filter(id => id !== queenId);
-                    else if (selectedTops.length < topsToSelect) selectedTops.push(queenId);
-                } else {
-                    if (selectedBottoms.includes(queenId)) selectedBottoms = selectedBottoms.filter(id => id !== queenId);
-                    else if (selectedBottoms.length < bottomsToSelect) selectedBottoms.push(queenId);
-                }
-                render();
-            });
-        });
-
-        const confirmBtn = document.getElementById('confirm-btn');
-        if (confirmBtn) {
-            confirmBtn.addEventListener('click', () => {
-                if (selectionPhase === 'tops') {
-                    if (castSize <= 5) {
-                        const remainingQueens = scores.filter(s => !selectedTops.includes(s.queen.id));
-                        selectedBottoms = remainingQueens.map(s => s.queen.id);
-                        onPlacementsSelected(selectedTops, selectedBottoms);
-                    } else {
-                        selectionPhase = 'bottoms';
-                        render();
-                    }
-                } else {
-                    onPlacementsSelected(selectedTops, selectedBottoms);
-                }
-            });
-        }
-    };
-    advanceButton.classList.add('hidden');
-    render();
-}
-
-export function promptForWinner(topQueens, phaseSubheader, resultsContainer, advanceButton, onWinnerSelected, fullCast) {
+/**
+ * Prompts the user to select the winner of the challenge.
+ * @param {Array<object>} scores - The sorted array of queens and their scores.
+ * @param {HTMLElement} phaseSubheader - The subheader element.
+ * @param {HTMLElement} resultsContainer - The main container for results.
+ * @param {HTMLElement} advanceButton - The advance button element.
+ * @param {Function} onWinnerSelected - Callback function with the winner's ID.
+ */
+export function promptForWinner(scores, phaseSubheader, resultsContainer, advanceButton, onWinnerSelected) {
     phaseSubheader.textContent = "Judges' Deliberations: The Tops";
-    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">From your chosen tops, select the winner(s).</h3></div><div class="space-y-3">`;
-    let selectedWinners = [];
+    const topQueens = scores.slice(0, 3);
+    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">The judges were blown away by the top queens.</h3><p class="text-gray-300">Based on their critiques, you must choose a winner.</p></div><div class="space-y-3">`;
     topQueens.forEach(s => {
         const fullQueenData = fullCast.find(q => q.id === s.queen.id);
         const trackRecordHTML = fullQueenData.trackRecord.map(p => `<span class="track-record-pill placement-${p}">${p}</span>`).join(' ') || "No record yet";
@@ -318,7 +314,14 @@ export function promptForWinner(topQueens, phaseSubheader, resultsContainer, adv
     advanceButton.classList.add('hidden');
 }
 
-export function promptForBottoms(bottomQueens, phaseSubheader, resultsContainer, advanceButton, onBottomSelected, fullCast) {
+/**
+ * Prompts the user to save one queen from the bottom two.
+ * @param {Array<object>} scores - The sorted array of queens and their scores.
+ * @param {HTMLElement} phaseSubheader - The subheader element.
+ * @param {HTMLElement} resultsContainer - The main container for results.
+ * @param {Function} onBottomSelected - Callback function with the safe queen's ID.
+ */
+export function promptForBottoms(scores, phaseSubheader, resultsContainer, onBottomSelected) {
     phaseSubheader.textContent = "Judges' Deliberations: The Bottoms";
     let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">From your chosen bottoms, you must save one.</h3><p class="text-gray-300">The other two will lip sync for their lives.</p></div><div class="space-y-3">`;
     bottomQueens.forEach(s => {
@@ -328,22 +331,30 @@ export function promptForBottoms(bottomQueens, phaseSubheader, resultsContainer,
     });
     html += `</div>`;
     resultsContainer.innerHTML = html;
-    resultsContainer.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.currentTarget.classList.add('selected');
-            resultsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
-            setTimeout(() => onBottomSelected(btn.dataset.safeId), 500);
-        });
-    });
-    advanceButton.classList.add('hidden');
+    resultsContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', (e) => {
+        e.currentTarget.classList.add('selected');
+        resultsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+        setTimeout(() => onBottomSelected(btn.dataset.safeId), 500);
+    }));
 }
 
-// ... the rest of the file is unchanged ...
-
+/**
+ * Prompts the user to decide the outcome of the lip sync.
+ * @param {object} episodeResults - The results object for the current episode.
+ * @param {Array<object>} finalScores - The array of all queens and their scores for this episode.
+ * @param {Array<object>} fullCast - The complete cast array for track record lookup.
+ * @param {HTMLElement} phaseSubheader - The subheader element.
+ * @param {HTMLElement} resultsContainer - The main container for results.
+ * @param {HTMLElement} advanceButton - The advance button element.
+ * @param {Function} onLipSyncDecision - Callback with the user's decision.
+ */
 export function promptForLipSyncWinner(episodeResults, finalScores, fullCast, phaseSubheader, resultsContainer, advanceButton, onLipSyncDecision) {
     const bottomQueens = episodeResults.placements.filter(p => p.placement === 'BTM').map(p => finalScores.find(s => s.queen.id === p.queen.id));
-    if (!bottomQueens || bottomQueens.length < 2) {
-        onLipSyncDecision({ eliminated: bottomQueens.map(q => q.queen) });
+
+    if (bottomQueens.length < 2) {
+        // This case shouldn't happen with the bottom 3 prompt, but it's a safe fallback.
+        const decision = { eliminated: [bottomQueens[0].queen] };
+        onLipSyncDecision(decision);
         return;
     }
     const [s1, s2] = bottomQueens;

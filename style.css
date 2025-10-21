@@ -163,28 +163,3 @@ body::after {
 .placement-WINNER { background: linear-gradient(45deg, #fde047, #fbbf24); color: black; font-weight: bold; }
 .placement-RUNNER-UP { background: linear-gradient(45deg, #e5e7eb, #9ca3af); color: black; font-weight: bold; }
 .track-record-pill { display: inline-block; padding: 0.1rem 0.5rem; font-size: 0.7rem; font-weight: bold; border-radius: 9999px; color: white; }
-
-/* FIX: Styles for Mama Pao custom placement feedback */
-.custom-placement-card.selected-top {
-    border-color: #3b82f6 !important; /* Blue for top */
-    box-shadow: 0 0 15px #3b82f6;
-}
-.custom-placement-card.selected-bottom {
-    border-color: #d97706 !important; /* Amber for bottom */
-    box-shadow: 0 0 15px #d97706;
-}
-.custom-placement-card.dimmed {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-.custom-placement-card:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: scale(1);
-    box-shadow: none;
-}
-.custom-placement-card:disabled:hover {
-     background-color: rgba(31, 41, 55, 0.7); 
-     border-color: #4B5563;
-}
-
