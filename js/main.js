@@ -65,6 +65,31 @@ function calculateTrackRecordScore(queen) {
 function assignPlacements(results) {
     const len = results.length;
     if (len === 0) return [];
+
+    const placements = [];
+    
+    const scoreDifference = results[0].totalScore - results[1].totalScore;
+    if (len > 5 && scoreDifference < 1 && Math.random() < 0.25) {
+        placements.push({ queen: results[0].queen, placement: 'WIN' });
+        placements.push({ queen: results[1].queen, placement: 'WIN' });
+        if (results[2]) placements.push({ queen: results[2].queen, placement: 'HIGH' });
+        results.slice(3).forEach((r, i) => {
+            const originalIndex = i + 3;
+            if (originalIndex >= len - 2) placements.push({ queen: r.queen, placement: 'BTM' });
+            else if (originalIndex === len - 3) placements.push({ queen: r.queen, placement: 'LOW' });
+            else placements.push({ queen: r.queen, placement: 'SAFE' });
+        });
+        return placements;
+    }
+    
+    if (len === 5) {
+        return results.map((r, i) => {
+            if (i === 0) return { queen: r.queen, placement: 'WIN' };
+            if (i <= 2) return { queen: r.queen, placement: 'HIGH' };
+            return { queen: r.queen, placement: 'BTM' };
+        });
+    }
+
     return results.map((r, i) => {
         let placement;
         if (i === 0) placement = 'WIN';
@@ -115,14 +140,10 @@ function runEpisode() {
 
     finalScores = currentCast.map(q => {
         const lipsyncCount = q.trackRecord.filter(p => p === 'BTM' || p === 'BTM2').length;
-        const fatiguePenalty = lipsyncCount * 5; // Penalty for each previous time in the bottom
-        
-        const perfScore = (q.stats[challenge.primaryStat] * 5) + (Math.random() * 65); // Increased randomness
-        const runwayScore = (q.stats.runway * 5) + (Math.random() * 65); // Increased randomness
-        
-        let totalScore = (perfScore * 0.75) + (runwayScore * 0.25);
-        totalScore -= fatiguePenalty; // Apply fatigue penalty
-
+        const fatiguePenalty = lipsyncCount * 5;
+        const perfScore = (q.stats[challenge.primaryStat] * 5) + (Math.random() * 65);
+        const runwayScore = (q.stats.runway * 5) + (Math.random() * 65);
+        let totalScore = (perfScore * 0.75) + (runwayScore * 0.25) - fatiguePenalty;
         return { queen: q, totalScore, perfScore, runwayScore, critiques: {} };
     }).sort((a, b) => b.totalScore - a.totalScore);
 
@@ -189,41 +210,26 @@ function runLipSyncPhase() {
         }
 
         const [q1Result, q2Result] = bottomQueens.map(p => finalScores.find(s => s.queen.id === p.queen.id));
-        
-        // --- NEW: Overhauled Lip Sync Logic ---
-        const q1Score = q1Result.queen.stats.lipsync * 10 + Math.random() * 25; 
+        const q1Score = q1Result.queen.stats.lipsync * 10 + Math.random() * 25;
         const q2Score = q2Result.queen.stats.lipsync * 10 + Math.random() * 25;
 
         if (doubleSashayCount < 1 && q1Score < 30 && q2Score < 30 && Math.random() < 0.1) {
             eliminatedQueens = [q1Result.queen, q2Result.queen];
             doubleSashayCount++;
-            episodeResults.placements.find(p => p.queen.id === q1Result.queen.id).placement = 'ELIM';
-            episodeResults.placements.find(p => p.queen.id === q2Result.queen.id).placement = 'ELIM';
-        } else if (doubleShantayCount < 2 && (q1Score > 95 && q2Score > 95) && Math.random() < 0.2) { // Double shantay requires exceptional performance
+            episodeResults.placements.forEach(p => { if(p.queen.id === q1Result.queen.id || p.queen.id === q2Result.queen.id) p.placement = 'ELIM'; });
+        } else if (doubleShantayCount < 2 && (q1Score > 95 && q2Score > 95) && Math.random() < 0.2) {
             doubleShantayCount++;
             episodeResults.placements.forEach(p => { if(p.queen.id === q1Result.queen.id || p.queen.id === q2Result.queen.id) p.placement = 'BTM2'; });
         } else {
             const q1LipSyncs = q1Result.queen.trackRecord.filter(p => p === 'BTM' || p === 'BTM2').length;
             const q2LipSyncs = q2Result.queen.trackRecord.filter(p => p === 'BTM' || p === 'BTM2').length;
-            const q1TrackRecordScore = calculateTrackRecordScore(q1Result.queen);
-            const q2TrackRecordScore = calculateTrackRecordScore(q2Result.queen);
-
-            // Weighted score: performance + track record bonus - repeat offender penalty
-            const finalLipSyncScore1 = (q1Score * 1.0) + (q1TrackRecordScore * 0.5) - (q1LipSyncs * 15);
-            const finalLipSyncScore2 = (q2Score * 1.0) + (q2TrackRecordScore * 0.5) - (q2LipSyncs * 15);
-
+            const finalLipSyncScore1 = (q1Score * 1.0) + (calculateTrackRecordScore(q1Result.queen) * 0.5) - (q1LipSyncs * 15);
+            const finalLipSyncScore2 = (q2Score * 1.0) + (calculateTrackRecordScore(q2Result.queen) * 0.5) - (q2LipSyncs * 15);
             let winner, loser;
-
-            // "Judges' Fatigue" rule for repeat lip-syncers
-            if (q1LipSyncs >= 2 && finalLipSyncScore2 > finalLipSyncScore1) {
-                winner = q2Result; loser = q1Result;
-            } else if (q2LipSyncs >= 2 && finalLipSyncScore1 > finalLipSyncScore2) {
-                winner = q1Result; loser = q2Result;
-            } else if (q1LipSyncs >= 2 && finalLipSyncScore1 > finalLipSyncScore2 && (finalLipSyncScore1 - finalLipSyncScore2 < 20)) {
-                // If a queen on her 3rd+ lip sync only wins by a small margin, she still goes home
-                winner = q2Result; loser = q1Result;
-            } else if (q2LipSyncs >= 2 && finalLipSyncScore2 > finalLipSyncScore1 && (finalLipSyncScore2 - finalLipSyncScore1 < 20)) {
-                winner = q1Result; loser = q2Result;
+            if ((q1LipSyncs >= 2 && finalLipSyncScore1 - finalLipSyncScore2 < 20) || (q2LipSyncs >= 2 && finalLipSyncScore2 > finalLipSyncScore1)) {
+                 winner = q2Result; loser = q1Result;
+            } else if ((q2LipSyncs >= 2 && finalLipSyncScore2 - finalLipSyncScore1 < 20) || (q1LipSyncs >= 2 && finalLipSyncScore1 > finalLipSyncScore2)) {
+                 winner = q1Result; loser = q2Result;
             } else {
                 winner = finalLipSyncScore1 >= finalLipSyncScore2 ? q1Result : q2Result;
                 loser = finalLipSyncScore1 < finalLipSyncScore2 ? q1Result : q2Result;
@@ -357,22 +363,24 @@ function handleWinnerCrowning(winner, runnerUp) {
 function handleCustomPlacementsSelection(topIds, bottomIds) {
     episodeResults.userTops = finalScores.filter(s => topIds.includes(s.queen.id));
     episodeResults.userBottoms = finalScores.filter(s => bottomIds.includes(s.queen.id));
-    ui.promptForWinner(episodeResults.userTops, phaseSubheader, resultsContainer, advanceButton, handleWinnerSelection);
-}
-
-function handleCustomPlacementsSelection(topIds, bottomIds) {
-    episodeResults.userTops = finalScores.filter(s => topIds.includes(s.queen.id));
-    episodeResults.userBottoms = finalScores.filter(s => bottomIds.includes(s.queen.id));
     ui.promptForWinner(episodeResults.userTops, phaseSubheader, resultsContainer, advanceButton, handleWinnerSelection, fullCast);
 }
 
 function handleWinnerSelection(winnerIds) {
     episodeResults.placements = [];
-    finalScores.slice(0, 3).forEach(s => {
-        const placement = s.queen.id === winnerId ? 'WIN' : 'HIGH';
+    episodeResults.userTops.forEach(s => {
+        const placement = winnerIds.includes(s.queen.id) ? 'WIN' : 'HIGH';
         episodeResults.placements.push({ queen: s.queen, placement });
     });
-    ui.promptForBottoms(finalScores, phaseSubheader, resultsContainer, handleBottomSelection);
+
+    if (currentCast.length <= 5) {
+        episodeResults.userBottoms.forEach(s => {
+            episodeResults.placements.push({ queen: s.queen, placement: 'BTM' });
+        });
+        ui.promptForLipSyncWinner(episodeResults, finalScores, fullCast, phaseSubheader, resultsContainer, advanceButton, handleLipSyncDecision);
+    } else {
+        ui.promptForBottoms(episodeResults.userBottoms, phaseSubheader, resultsContainer, advanceButton, handleBottomSelection, fullCast);
+    }
 }
 
 function handleBottomSelection(safeId) {
