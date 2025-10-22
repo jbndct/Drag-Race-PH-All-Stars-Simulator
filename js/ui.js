@@ -3,6 +3,7 @@
 // Handles all direct DOM manipulation and rendering.
 // =================================================================================
 
+// ... (populateQueenGrid can stay the same)
 export function populateQueenGrid(queens, queenGrid, onQueenClick) {
     queenGrid.innerHTML = '';
     const sortedQueens = queens.sort((a, b) => (a.season - b.season) || a.name.localeCompare(b.name));
@@ -28,7 +29,6 @@ export function populateQueenGrid(queens, queenGrid, onQueenClick) {
         queenGrid.appendChild(card);
     });
 }
-
 export function switchView(viewToShow, bodyContainer, episodePhase) {
     ['menu-view', 'selection-view', 'simulation-view'].forEach(id => {
         const view = document.getElementById(id);
@@ -39,9 +39,16 @@ export function switchView(viewToShow, bodyContainer, episodePhase) {
     let bg = 'var(--bg-image-selection)';
     if (viewToShow.id === 'simulation-view') {
         const phaseToBg = {
-            'performance': 'var(--bg-image-challenge)',
-            'placements': 'var(--bg-image-runway)',
+            'judgesCritiques': 'var(--bg-image-challenge)', 
+            'safetyCeremony': 'var(--bg-image-runway)',
+            'gatherTopsAndBottoms': 'var(--bg-image-runway)',
+            'topsAndBottomsCritiques': 'var(--bg-image-runway)',
+            'topsReveal': 'var(--bg-image-runway)',
+            'winnerReveal': 'var(--bg-image-runway)',
+            'bottomsReveal': 'var(--bg-image-runway)',
+            'lowReveal': 'var(--bg-image-runway)',
             'lipsync': 'var(--bg-image-lipsync)',
+            'lipsyncResult': 'var(--bg-image-lipsync)',
             'trackRecord': 'var(--bg-image-selection)',
             'finale': 'var(--bg-image-finale)',
             'finaleTop2': 'var(--bg-image-finale)',
@@ -51,7 +58,6 @@ export function switchView(viewToShow, bodyContainer, episodePhase) {
     }
     bodyContainer.style.backgroundImage = bg;
 }
-
 export function updateSelectionUI(selectedCast, castList, castPlaceholder, castCounter, startButton, instructions, MIN_CAST_SIZE, MAX_CAST_SIZE) {
     castList.innerHTML = '';
     castPlaceholder.style.display = selectedCast.length === 0 ? 'block' : 'none';
@@ -67,19 +73,43 @@ export function updateSelectionUI(selectedCast, castList, castPlaceholder, castC
     instructions.textContent = startButton.disabled ? (size < MIN_CAST_SIZE ? `Select at least ${MIN_CAST_SIZE - size} more queen(s).` : `Select between ${MIN_CAST_SIZE} and ${MAX_CAST_SIZE}.`) : 'Your cast is ready!';
     document.querySelectorAll('.queen-card').forEach(c => c.classList.toggle('selected', selectedCast.some(q => q.id === c.dataset.id)));
 }
-
 export function displayEpisodeHeader(episodeNumber, challenge, episodeHeader, phaseSubheader) {
     episodeHeader.textContent = `Episode ${episodeNumber}: ${challenge.name}`;
     phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">${challenge.intro}</p>`;
 }
 
+// =================================================================================
+// NEW & MODIFIED STANDARD MODE UI FUNCTIONS
+// =================================================================================
 
-// NEW: Shows all queens at the start of judging.
+export function displayJudgesCritiques(scores, phaseSubheader, resultsContainer) {
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The judges have reviewed the performances and runways. Here's how each queen stacked up...</p>`;
+    let html = '<div class="space-y-4">';
+    scores.forEach(s => {
+        html += `<div class="critique-card bg-black/50 p-4 rounded-lg flex items-start gap-4">
+                    <img src="${s.queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${s.queen.name}">
+                    <div class="flex-1">
+                        <p class="font-bold text-lg">${s.queen.name}</p>
+                        <div class="flex gap-4 items-center mt-2">
+                           <p class="text-sm font-semibold text-blue-400">Challenge:</p>
+                           ${generateStarRating(s.perfScore)}
+                        </div>
+                        <div class="flex gap-4 items-center mt-1">
+                           <p class="text-sm font-semibold text-pink-400">Runway:</p>
+                           ${generateStarRating(s.runwayScore)}
+                        </div>
+                    </div>
+                 </div>`;
+    });
+    html += '</div>';
+    resultsContainer.innerHTML = html;
+}
+
 export function displaySafetyCeremony(currentCast, phaseSubheader, resultsContainer) {
-    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The judges have made some decisions. One by one, the queens will be called.</p>`;
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The judges have made their decisions. One by one, I will call the safe queens.</p>`;
     let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">';
     currentCast.forEach(queen => {
-        html += `<div class="queen-bubble bg-black/50 p-3 rounded-lg text-center transition-all duration-500">
+        html += `<div class="queen-bubble bg-black/50 p-3 rounded-lg text-center" data-queen-id="${queen.id}">
                     <img src="${queen.image}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${queen.name}">
                     <p class="font-bold text-lg mt-2">${queen.name}</p>
                  </div>`;
@@ -88,106 +118,136 @@ export function displaySafetyCeremony(currentCast, phaseSubheader, resultsContai
     resultsContainer.innerHTML = html;
 }
 
-// MODIFIED: Renamed from displayAllCritiques and now only shows non-safe queens.
-export function displayFocusedCritiques(scores, placements, phaseSubheader, resultsContainer) {
-    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The following queens represent the tops and bottoms of the week. The rest of you are safe.</p>`;
-    const nonSafeQueens = placements.filter(p => p.placement !== 'SAFE').map(p => p.queen.id);
-    const scoresToDisplay = scores.filter(s => nonSafeQueens.includes(s.queen.id));
-    
-    // Animate safe queens disappearing
-    document.querySelectorAll('.queen-bubble').forEach(el => {
-        const queenName = el.querySelector('p').textContent;
-        const isSafe = !scoresToDisplay.some(s => s.queen.name === queenName);
-        if (isSafe) {
-            el.classList.add('queen-safe');
-        }
+export function revealAllSafeQueens(safeQueens, phaseSubheader, advanceButton) {
+    advanceButton.disabled = true;
+    let delay = 500;
+    const reversedSafeQueens = [...safeQueens].reverse();
+
+    reversedSafeQueens.forEach(queen => {
+        setTimeout(() => {
+            const queenEl = document.querySelector(`.queen-bubble[data-queen-id="${queen.id}"]`);
+            if (queenEl) {
+                queenEl.classList.add('queen-safe');
+                phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider animate-pulse">${queen.name}, you are safe.</p>`;
+            }
+        }, delay);
+        delay += 1200;
     });
 
     setTimeout(() => {
-        let html = '<div class="space-y-4">';
-        scoresToDisplay.forEach(s => {
-            const scoreLevel = s.totalScore > 75 ? 'good' : s.totalScore > 40 ? 'safe' : 'bad';
-            html += `<div class="critique-card critique-${scoreLevel} bg-black/50 p-4 rounded-lg flex items-start gap-4">
-                        <img src="${s.queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${s.queen.name}">
-                        <div class="flex-1">
-                            <p class="font-bold text-lg">${s.queen.name}</p>
-                            <p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p>
-                            <p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p>
-                        </div>
-                     </div>`;
-        });
-        html += '</div>';
-        resultsContainer.innerHTML = html;
-    }, 1500); // 1.5 second delay for the animation
+        phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The rest of you represent the tops and bottoms of the week.</p>`;
+        advanceButton.disabled = false;
+    }, delay);
 }
 
-// NEW: Shows the final placements for the tops and bottoms.
-export function displayPlacementReveal(placements, phaseSubheader, resultsContainer) {
-    phaseSubheader.textContent = "After careful deliberation...";
-    const tops = placements.filter(p => ['WIN', 'HIGH'].includes(p.placement));
-    const bottoms = placements.filter(p => ['LOW', 'BTM'].includes(p.placement));
-    
-    let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">`;
 
-    // Display Tops
-    html += `<div><h3 class="font-display text-3xl text-center mb-4 tracking-widest text-blue-400">THE TOPS</h3><div class="space-y-3">`;
-    tops.forEach(({ queen, placement }) => {
-        const winClass = placement === 'WIN' ? 'placement-WIN-card' : '';
-        html += `<div class="bg-black/50 p-3 rounded-lg flex items-center gap-4 ${winClass}">
-                    <img src="${queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${queen.name}">
-                    <div>
-                        <p class="font-bold text-lg">${queen.name}</p>
-                        <p class="font-display text-2xl tracking-widest text-pink-400">${placement}</p>
-                    </div>
+export function displayGatheringScreen(placements, phaseSubheader, resultsContainer) {
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">You represent the tops and bottoms of the week.</p>`;
+    const nonSafeQueens = placements.filter(p => p.placement !== 'SAFE').map(p => p.queen);
+    
+    let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">';
+    nonSafeQueens.forEach(queen => {
+        html += `<div class="queen-bubble bg-black/50 p-3 rounded-lg text-center" data-queen-id="${queen.id}">
+                    <img src="${queen.image}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${queen.name}">
+                    <p class="font-bold text-lg mt-2">${queen.name}</p>
                  </div>`;
     });
-    html += `</div></div>`;
-    
-    // Display Bottoms
-    html += `<div><h3 class="font-display text-3xl text-center mb-4 tracking-widest text-yellow-500">THE BOTTOMS</h3><div class="space-y-3">`;
-    bottoms.forEach(({ queen, placement }) => {
-        html += `<div class="bg-black/50 p-3 rounded-lg flex items-center gap-4">
-                    <img src="${queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${queen.name}">
-                    <div>
-                        <p class="font-bold text-lg">${queen.name}</p>
-                        <p class="font-display text-2xl tracking-widest text-pink-400">${placement === 'BTM' ? 'BTM 2' : placement}</p>
-                    </div>
-                 </div>`;
-    });
-    html += `</div></div>`;
-
     html += `</div>`;
     resultsContainer.innerHTML = html;
 }
 
+export function displayTopsAndBottomsCritiques(scores, placements, phaseSubheader, resultsContainer) {
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">You represent the tops and bottoms of the week.</p>`;
+    const nonSafeQueens = placements.filter(p => p.placement !== 'SAFE').map(p => p.queen.id);
+    const scoresToDisplay = scores.filter(s => nonSafeQueens.includes(s.queen.id));
+    
+    let html = '<div class="space-y-4">';
+    scoresToDisplay.forEach(s => {
+        const scoreLevel = s.totalScore > 75 ? 'good' : s.totalScore > 40 ? 'safe' : 'bad';
+        html += `<div class="critique-card critique-${scoreLevel} bg-black/50 p-4 rounded-lg flex items-start gap-4">
+                    <img src="${s.queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${s.queen.name}">
+                    <div class="flex-1">
+                        <p class="font-bold text-lg">${s.queen.name}</p>
+                        <p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p>
+                        <p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p>
+                    </div>
+                 </div>`;
+    });
+    html += '</div>';
+    resultsContainer.innerHTML = html;
+}
+export function displayTops(placements, phaseSubheader, resultsContainer) {
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">Now for the tops...</p>`;
+    const tops = placements.filter(p => ['WIN', 'HIGH'].includes(p.placement));
+    let html = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4">`;
+    tops.forEach(({ queen, placement }) => {
+        html += `<div class="bg-black/50 p-3 rounded-lg text-center" data-queen-id="${queen.id}">
+                    <img src="${queen.image}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${queen.name}">
+                    <p class="font-bold text-lg mt-2">${queen.name}</p>
+                 </div>`;
+    });
+    html += `</div>`;
+    resultsContainer.innerHTML = html;
+}
+export function revealWinner(placements, phaseSubheader, resultsContainer) {
+    const winners = placements.filter(p => p.placement === 'WIN');
+    if (winners.length > 0) {
+        if (winners.length === 1) {
+            const winner = winners[0];
+            phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">Condragulations ${winner.queen.name}, you are the winner of this week's challenge.</p>`;
+            const winnerEl = resultsContainer.querySelector(`[data-queen-id="${winner.queen.id}"]`);
+            if (winnerEl) {
+                winnerEl.classList.add('placement-WIN-card');
+                winnerEl.querySelector('img').classList.add('placement-WIN-img');
+            }
+        } else {
+            const winnerNames = winners.map(w => w.queen.name).join(' and ');
+            phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">Condragulations ${winnerNames}, you are BOTH winners of this week's challenge.</p>`;
+            winners.forEach(winner => {
+                const winnerEl = resultsContainer.querySelector(`[data-queen-id="${winner.queen.id}"]`);
+                if (winnerEl) {
+                    winnerEl.classList.add('placement-WIN-card');
+                    winnerEl.querySelector('img').classList.add('placement-WIN-img');
+                }
+            });
+        }
+    }
+}
+export function displayBottoms(placements, phaseSubheader, resultsContainer) {
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">...and the bottoms.</p>`;
+    const bottoms = placements.filter(p => ['LOW', 'BTM'].includes(p.placement));
+    let html = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4">`;
+    bottoms.forEach(({ queen, placement }) => {
+        html += `<div class="bg-black/50 p-3 rounded-lg text-center" data-queen-id="${queen.id}">
+                    <img src="${queen.image}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${queen.name}">
+                    <p class="font-bold text-lg mt-2">${queen.name}</p>
+                 </div>`;
+    });
+    html += `</div>`;
+    resultsContainer.innerHTML = html;
+}
+export function revealLow(placements, phaseSubheader, resultsContainer) {
+    const lowQueen = placements.find(p => p.placement === 'LOW');
+    if (lowQueen) {
+        phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">${lowQueen.queen.name}, you are safe.</p>`;
+        const lowEl = resultsContainer.querySelector(`[data-queen-id="${lowQueen.queen.id}"]`);
+        if (lowEl) {
+            lowEl.classList.add('queen-safe');
+        }
+    } else {
+        phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">This week, there is no low placement.</p>`;
+    }
+}
 
-// NEW: Shows just the two queens lip syncing, without the result.
 export function displayLipSyncMatchup(episodeResults, phaseSubheader, resultsContainer) {
     phaseSubheader.textContent = "Two queens stand before me...";
     const lipSyncers = episodeResults.placements.filter(p => p.placement === 'BTM').map(p => p.queen);
     const song = episodeResults.lipSyncSong || "an epic ballad";
-
     if (lipSyncers.length < 2) {
         resultsContainer.innerHTML = `<div class="text-center p-8"><p class="text-xl">An unexpected turn of events... there is no Lip Sync for Your Life tonight.</p></div>`;
         return;
     }
-
-    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto">
-        <h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2>
-        <p class="text-lg">Prepare to lip sync to ${song}!</p>
-        <div class="flex justify-center items-center gap-4 md:gap-8 py-8">
-            <div class="text-center">
-                <img src="${lipSyncers[0].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-gray-400 object-cover" alt="${lipSyncers[0].name}">
-                <p class="font-bold text-xl mt-2">${lipSyncers[0].name}</p>
-            </div>
-            <p class="font-display text-6xl text-pink-500">VS</p>
-            <div class="text-center">
-                <img src="${lipSyncers[1].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-gray-400 object-cover" alt="${lipSyncers[1].name}">
-                <p class="font-bold text-xl mt-2">${lipSyncers[1].name}</p>
-            </div>
-        </div>
-        <p class="text-gray-300 italic text-lg pt-4">"The time has come... to lip sync... for your LIFE! Good luck, and don't f*ck it up."</p>
-    </div>`;
+    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">Prepare to lip sync to ${song}!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${lipSyncers[0].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-gray-400 object-cover" alt="${lipSyncers[0].name}"><p class="font-bold text-xl mt-2">${lipSyncers[0].name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="${lipSyncers[1].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-gray-400 object-cover" alt="${lipSyncers[1].name}"><p class="font-bold text-xl mt-2">${lipSyncers[1].name}</p></div></div><p class="text-gray-300 italic text-lg pt-4">"The time has come... to lip sync... for your LIFE! Good luck, and don't f*ck it up."</p></div>`;
 }
 
 export function displayLipSyncResults(episodeResults, eliminatedQueens, phaseSubheader, resultsContainer) {
@@ -214,7 +274,6 @@ export function displayLipSyncResults(episodeResults, eliminatedQueens, phaseSub
     let narrative = `Both queens gave it their all, but ${winner.name}'s passion and precision on stage gave her the edge. She truly embodied the spirit of the song.`;
     resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto"><h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2><p class="text-lg">The bottom two queens must perform ${song}!</p><div class="flex justify-center items-center gap-4 md:gap-8 py-8"><div class="text-center"><img src="${winner.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-green-400 object-cover placement-WIN-img" alt="${winner.name}"><p class="font-bold text-xl mt-2">${winner.name}</p></div><p class="font-display text-6xl text-pink-500">VS</p><div class="text-center"><img src="${loser.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-red-500 object-cover placement-ELIM-img" alt="${loser.name}"><p class="font-bold text-xl mt-2">${loser.name}</p></div></div><p class="text-gray-300 italic text-lg">"${narrative}"</p><p class="font-display text-4xl text-green-400 pt-4">Shantay, you stay, ${winner.name}.</p><p class="font-display text-3xl mt-2 text-red-400">${loser.name}, sashay away.</p></div>`;
 }
-
 export function displayTrackRecord(fullCast, shuffledChallenges, resultsContainer, calculateTrackRecordScore, isFinalView = false) {
     const comprehensivePlacementOrder = { 'WINNER': 0, 'RUNNER-UP': 1, 'WIN': 2, 'HIGH': 3, 'SAFE': 4, 'LOW': 5, 'BTM2': 6, 'BTM': 6, 'ELIM': 7 };
     const sortedCast = [...fullCast].sort((a, b) => {
@@ -245,21 +304,17 @@ export function displayTrackRecord(fullCast, shuffledChallenges, resultsContaine
     tableHTML += `</tbody></table></div>`;
     resultsContainer.innerHTML = tableHTML;
 }
-
 export function displayTop2Results(top2, eliminated, resultsContainer) {
     resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-2xl mx-auto"><p class="text-2xl font-display tracking-widest">Based on the final performance and season-long track record, the Top 2 queens are...</p><div class="p-4 rounded-lg bg-green-900/50 text-3xl font-display tracking-widest flex items-center justify-center gap-4"><img src="${top2[0].queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${top2[0].queen.name}">${top2[0].queen.name}</div><div class="p-4 rounded-lg bg-green-900/50 text-3xl font-display tracking-widest flex items-center justify-center gap-4"><img src="${top2[1].queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${top2[1].queen.name}">${top2[1].queen.name}</div><p class="text-xl pt-4">This means, ${eliminated.map(q => q.name).join(' and ')}, I'm sorry my dears but this is not your time. Sashay away.</p></div>`;
 }
-
 export function displayWinner(winner, runnerUp, resultsContainer) {
     resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-2xl mx-auto"><p class="text-2xl font-display tracking-widest">Ladies, the decision is final...</p><p class="text-3xl font-display tracking-widest">The next Drag Race Philippines Superstar is...</p><div class="py-8"><img src="${winner.image}" class="w-48 h-48 rounded-full object-cover mx-auto border-8 border-amber-400 placement-WIN-img" alt="${winner.name}"><p class="text-7xl md:text-8xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse mt-4">${winner.name}</p></div><p class="text-3xl font-display tracking-widest">Condragulations, you're a winner, baby!</p><p class="text-xl pt-4">And to our runner-up, ${runnerUp.name}, you are and will always be a star. Now, prance, my queen!</p></div>`;
 }
-
 export function updateAdvanceButton(text, advanceButton, restartButton, hide = false) {
     advanceButton.textContent = text;
     advanceButton.classList.toggle('hidden', hide);
     if (!hide) restartButton.classList.add('hidden');
 }
-
 export function showRestartButton(advanceButton, restartButton, onFinalRecordClick) {
     advanceButton.textContent = 'View Final Track Record';
     advanceButton.classList.remove('hidden');
@@ -289,8 +344,6 @@ export function promptForCustomPlacements(scores, phaseSubheader, resultsContain
     let selectedTops = [];
     let selectedBottoms = [];
     let selectionPhase = 'tops';
-    // FIX: The number of tops is always 3 for a cast of 5 or more.
-    // The original logic (castSize > 5 ? 3 : 2) was incorrect for castSize = 5.
     const topsToSelect = 3; 
     const bottomsToSelect = castSize > 5 ? 3 : 2;
 
@@ -419,16 +472,6 @@ export function promptForBottoms(bottomQueens, phaseSubheader, resultsContainer,
     advanceButton.classList.add('hidden');
 }
 
-/**
- * Prompts the user to decide the outcome of the lip sync.
- * @param {object} episodeResults - The results object for the current episode.
- * @param {Array<object>} finalScores - The array of all queens and their scores for this episode.
- * @param {Array<object>} fullCast - The complete cast array for track record lookup.
- * @param {HTMLElement} phaseSubheader - The subheader element.
- * @param {HTMLElement} resultsContainer - The main container for results.
- * @param {HTMLElement} advanceButton - The advance button element.
- * @param {Function} onLipSyncDecision - Callback with the user's decision.
- */
 export function promptForLipSyncWinner(episodeResults, finalScores, fullCast, phaseSubheader, resultsContainer, advanceButton, onLipSyncDecision) {
     const bottomQueens = episodeResults.placements.filter(p => p.placement === 'BTM').map(p => finalScores.find(s => s.queen.id === p.queen.id));
 
@@ -439,7 +482,6 @@ export function promptForLipSyncWinner(episodeResults, finalScores, fullCast, ph
     }
     const [s1, s2] = bottomQueens;
     
-    // FIX: Update the prompt to include the song type/vibe for better context.
     const songName = episodeResults.lipSyncSong || "a powerful anthem";
     const songType = episodeResults.lipSyncType || 'show-stopping';
     let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Two queens stand before me.</h3><p class="text-gray-300">The queens will lip sync to ${songName}.<br>The judges are looking for a <span class="font-semibold text-pink-400">${songType}</span> performance. You decide their fate.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
@@ -518,4 +560,3 @@ export function promptForWinnerCrown(q1, q2, score1, score2, phaseSubheader, res
     });
     advanceButton.classList.add('hidden');
 }
-

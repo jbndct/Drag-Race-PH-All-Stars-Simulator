@@ -15,7 +15,7 @@ let fullCast = [];
 let shuffledChallenges = [];
 let top2 = [];
 let episodeNumber = 1;
-let episodePhase = 'safetyCeremony'; 
+let episodePhase = 'judgesCritiques'; // MODIFIED: New starting phase
 let episodeResults = {};
 let finalScores = [];
 let eliminatedQueens = [];
@@ -46,9 +46,8 @@ const phaseSubheader = document.getElementById('phase-subheader');
 const resultsContainer = document.getElementById('results-container');
 
 // =================================================================================
-// 3. CORE LOGIC & HELPER FUNCTIONS
+// 3. CORE LOGIC & HELPER FUNCTIONS (No changes)
 // =================================================================================
-
 function generateCritique(queen, stat, score) {
     const level = score > 75 ? 'high' : score > 40 ? 'mid' : 'low';
     const options = critiques[stat][level];
@@ -56,18 +55,14 @@ function generateCritique(queen, stat, score) {
     const separator = critiqueText.startsWith("'") ? "" : " ";
     return queen.name + separator + critiqueText;
 }
-
 function calculateTrackRecordScore(queen) {
     const placementScores = { 'WINNER': 10, 'RUNNER-UP': 8, 'WIN': 5, 'HIGH': 4, 'SAFE': 3, 'LOW': 2, 'BTM2': 1, 'BTM': 1, 'ELIM': 0 };
     return queen.trackRecord.reduce((acc, placement) => acc + (placementScores[placement] || 0), 0);
 }
-
 function assignPlacements(results) {
     const len = results.length;
     if (len === 0) return [];
-
     const placements = [];
-    
     const scoreDifference = results[0].totalScore - results[1].totalScore;
     if (len > 5 && scoreDifference < 1 && Math.random() < 0.25) {
         placements.push({ queen: results[0].queen, placement: 'WIN' });
@@ -81,7 +76,6 @@ function assignPlacements(results) {
         });
         return placements;
     }
-    
     if (len === 5) {
         return results.map((r, i) => {
             if (i === 0) return { queen: r.queen, placement: 'WIN' };
@@ -89,7 +83,6 @@ function assignPlacements(results) {
             return { queen: r.queen, placement: 'BTM' };
         });
     }
-
     return results.map((r, i) => {
         let placement;
         if (i === 0) placement = 'WIN';
@@ -100,16 +93,13 @@ function assignPlacements(results) {
         return { queen: r.queen, placement: placement };
     });
 }
-
 // =================================================================================
-// 4. STATE & UI MANAGEMENT FUNCTIONS
+// 4. STATE & UI MANAGEMENT FUNCTIONS (No changes)
 // =================================================================================
-
 function selectMode(mode) {
     gameMode = mode;
     ui.switchView(selectionView, bodyContainer, episodePhase);
 }
-
 function toggleQueenSelection(queen) {
     const i = selectedCast.findIndex(q => q.id === queen.id);
     if (i > -1) {
@@ -119,7 +109,6 @@ function toggleQueenSelection(queen) {
     }
     ui.updateSelectionUI(selectedCast, castList, castPlaceholder, castCounter, startButton, instructions, MIN_CAST_SIZE, MAX_CAST_SIZE);
 }
-
 function startCompetition() {
     fullCast = selectedCast.map(q => ({ ...q, trackRecord: [], eliminated: false, epElim: -1 }));
     currentCast = [...fullCast];
@@ -129,9 +118,8 @@ function startCompetition() {
     doubleSashayCount = 0;
     runEpisode();
 }
-
 // =================================================================================
-// 5. EPISODE & FINALE FLOW
+// 5. EPISODE & FINALE FLOW (MODIFIED)
 // =================================================================================
 
 function runEpisode() {
@@ -151,18 +139,18 @@ function runEpisode() {
         s.critiques.runway = generateCritique(s.queen, 'runway', s.runwayScore);
     });
 
-    ui.switchView(simulationView, bodyContainer, 'placements');
+    ui.switchView(simulationView, bodyContainer, 'judgesCritiques');
     ui.displayEpisodeHeader(episodeNumber, challenge, episodeHeader, phaseSubheader);
     
-    // =========================================================================
-    // FIX: Re-implement the branching logic for Standard vs. Mama Pao mode.
-    // =========================================================================
     if (gameMode === 'standard') {
         episodeResults.placements = assignPlacements(finalScores);
+        episodeResults.safeQueens = episodeResults.placements
+            .filter(p => p.placement === 'SAFE')
+            .map(p => p.queen);
         const randomSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
         episodeResults.lipSyncSong = randomSong.name;
         episodeResults.lipSyncType = randomSong.type;
-        runSafetyCeremonyPhase();
+        runJudgesCritiquesPhase();
     } else { // Mama Pao Mode
         episodePhase = 'placements';
         ui.promptForCustomPlacements(finalScores, phaseSubheader, resultsContainer, advanceButton, handleCustomPlacementsSelection, currentCast.length);
@@ -170,12 +158,19 @@ function runEpisode() {
 }
 
 function advanceEpisode() {
-    // This function now correctly handles ONLY the standard mode's step-by-step flow.
-    // Mama Pao mode uses its own callback chain and only re-joins at the end.
     switch (episodePhase) {
-        case 'safetyCeremony': runCritiquesPhase(); break;
-        case 'critiques': runPlacementRevealPhase(); break;
-        case 'placementReveal': runLipSyncPhase(); break;
+        case 'judgesCritiques': runSafetyCeremonyPhase(); break;
+        case 'safetyCeremony':
+            ui.revealAllSafeQueens(episodeResults.safeQueens, phaseSubheader, advanceButton);
+            episodePhase = 'gatherTopsAndBottoms';
+            ui.updateAdvanceButton("Proceed to Critiques", advanceButton, restartButton);
+            break;
+        case 'gatherTopsAndBottoms': runTopsAndBottomsCritiquesPhase(); break;
+        case 'topsAndBottomsCritiques': runTopsRevealPhase(); break;
+        case 'topsReveal': runWinnerRevealPhase(); break;
+        case 'winnerReveal': runBottomsRevealPhase(); break;
+        case 'bottomsReveal': runLowRevealPhase(); break;
+        case 'lowReveal': runLipSyncPhase(); break;
         case 'lipsync': runLipSyncResultPhase(); break;
         case 'lipsyncResult': runTrackRecordPhase(); break;
         case 'trackRecord':
@@ -194,36 +189,63 @@ function advanceEpisode() {
 }
 
 // -- Standard Mode Functions --
-function runSafetyCeremonyPhase() {
-    episodePhase = 'safetyCeremony';
-    ui.displaySafetyCeremony(currentCast, phaseSubheader, resultsContainer);
-    ui.updateAdvanceButton('Call The Safe Queens', advanceButton, restartButton);
+function runJudgesCritiquesPhase() {
+    episodePhase = 'judgesCritiques';
+    ui.displayJudgesCritiques(finalScores, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton("Begin The Ceremony", advanceButton, restartButton);
 }
 
-function runCritiquesPhase() {
-    episodePhase = 'critiques';
-    ui.displayFocusedCritiques(finalScores, episodeResults.placements, phaseSubheader, resultsContainer);
+function runSafetyCeremonyPhase() {
+    if (currentCast.length <= 6 || episodeResults.safeQueens.length === 0) {
+        runGatherTopsAndBottomsPhase();
+    } else {
+        episodePhase = 'safetyCeremony';
+        ui.displaySafetyCeremony(currentCast, phaseSubheader, resultsContainer);
+        ui.updateAdvanceButton('Reveal Safe Queens', advanceButton, restartButton);
+    }
+}
+
+function runGatherTopsAndBottomsPhase() {
+    episodePhase = 'gatherTopsAndBottoms';
+    ui.displayGatheringScreen(episodeResults.placements, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton("Proceed to Critiques", advanceButton, restartButton);
+}
+
+function runTopsAndBottomsCritiquesPhase() {
+    episodePhase = 'topsAndBottomsCritiques';
+    ui.displayTopsAndBottomsCritiques(finalScores, episodeResults.placements, phaseSubheader, resultsContainer);
     ui.updateAdvanceButton("Judges' Deliberations", advanceButton, restartButton);
 }
-
-function runPlacementRevealPhase() {
-    episodePhase = 'placementReveal';
-    ui.displayPlacementReveal(episodeResults.placements, phaseSubheader, resultsContainer);
-    ui.updateAdvanceButton('Lip Sync For Your Life!', advanceButton, restartButton);
+function runTopsRevealPhase() {
+    episodePhase = 'topsReveal';
+    ui.displayTops(episodeResults.placements, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton("Announce The Winner", advanceButton, restartButton);
 }
-
+function runWinnerRevealPhase() {
+    episodePhase = 'winnerReveal';
+    ui.revealWinner(episodeResults.placements, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton("Reveal The Bottoms", advanceButton, restartButton);
+}
+function runBottomsRevealPhase() {
+    episodePhase = 'bottomsReveal';
+    ui.displayBottoms(episodeResults.placements, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton("Save A Queen", advanceButton, restartButton);
+}
+function runLowRevealPhase() {
+    episodePhase = 'lowReveal';
+    ui.revealLow(episodeResults.placements, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton("Lip Sync For Your Life!", advanceButton, restartButton);
+}
 function runLipSyncPhase() {
     episodePhase = 'lipsync';
     ui.switchView(simulationView, bodyContainer, episodePhase);
     ui.displayLipSyncMatchup(episodeResults, phaseSubheader, resultsContainer);
     ui.updateAdvanceButton("See The Results", advanceButton, restartButton);
 }
-
 function runLipSyncResultPhase() {
     episodePhase = 'lipsyncResult';
     eliminatedQueens = [];
     const bottomQueens = episodeResults.placements.filter(r => r.placement === 'BTM');
-
     if (bottomQueens.length < 2) {
         const sortedCastByScore = [...finalScores].sort((a, b) => a.totalScore - b.totalScore);
         eliminatedQueens.push(bottomQueens.length > 0 ? bottomQueens[0].queen : sortedCastByScore[0].queen);
@@ -233,7 +255,6 @@ function runLipSyncResultPhase() {
         const [q1Result, q2Result] = bottomQueens.map(p => finalScores.find(s => s.queen.id === p.queen.id));
         const q1Score = q1Result.queen.stats.lipsync * 10 + Math.random() * 25;
         const q2Score = q2Result.queen.stats.lipsync * 10 + Math.random() * 25;
-
         if (doubleSashayCount < 1 && q1Score < 30 && q2Score < 30 && Math.random() < 0.1) {
             eliminatedQueens = [q1Result.queen, q2Result.queen];
             doubleSashayCount++;
@@ -247,34 +268,25 @@ function runLipSyncResultPhase() {
             const finalLipSyncScore1 = (q1Score * 1.0) + (calculateTrackRecordScore(q1Result.queen) * 0.5) - (q1LipSyncs * 15);
             const finalLipSyncScore2 = (q2Score * 1.0) + (calculateTrackRecordScore(q2Result.queen) * 0.5) - (q2LipSyncs * 15);
             let winner, loser;
-            if ((q1LipSyncs >= 2 && finalLipSyncScore1 - finalLipSyncScore2 < 20) || (q2LipSyncs >= 2 && finalLipSyncScore2 > finalLipSyncScore1)) {
-                 winner = q2Result; loser = q1Result;
-            } else if ((q2LipSyncs >= 2 && finalLipSyncScore2 - finalLipSyncScore1 < 20) || (q1LipSyncs >= 2 && finalLipSyncScore1 > finalLipSyncScore2)) {
-                 winner = q1Result; loser = q2Result;
-            } else {
-                winner = finalLipSyncScore1 >= finalLipSyncScore2 ? q1Result : q2Result;
-                loser = finalLipSyncScore1 < finalLipSyncScore2 ? q1Result : q2Result;
-            }
+            if ((q1LipSyncs >= 2 && finalLipSyncScore1 - finalLipSyncScore2 < 20) || (q2LipSyncs >= 2 && finalLipSyncScore2 > finalLipSyncScore1)) { winner = q2Result; loser = q1Result; } 
+            else if ((q2LipSyncs >= 2 && finalLipSyncScore2 - finalLipSyncScore1 < 20) || (q1LipSyncs >= 2 && finalLipSyncScore1 > finalLipSyncScore2)) { winner = q1Result; loser = q2Result; } 
+            else { winner = finalLipSyncScore1 >= finalLipSyncScore2 ? q1Result : q2Result; loser = finalLipSyncScore1 < finalLipSyncScore2 ? q1Result : q2Result; }
             eliminatedQueens.push(loser.queen);
             episodeResults.placements.find(p => p.queen.id === winner.queen.id).placement = 'BTM2';
             episodeResults.placements.find(p => p.queen.id === loser.queen.id).placement = 'ELIM';
         }
     }
-    
     ui.displayLipSyncResults(episodeResults, eliminatedQueens, phaseSubheader, resultsContainer);
     ui.updateAdvanceButton('View Track Record', advanceButton, restartButton);
 }
-
 // -- Shared Function --
 function runTrackRecordPhase() {
     episodePhase = 'trackRecord';
     ui.switchView(simulationView, bodyContainer, episodePhase);
-
     episodeResults.placements.forEach(p => {
         const queenInFullCast = fullCast.find(q => q.id === p.queen.id);
         if (queenInFullCast) queenInFullCast.trackRecord[episodeNumber - 1] = p.placement;
     });
-
     if (eliminatedQueens.length > 0) {
         eliminatedQueens.forEach(elimQueen => {
             const elimQueenInFullCast = fullCast.find(q => q.id === elimQueen.id);
@@ -285,19 +297,16 @@ function runTrackRecordPhase() {
         });
         currentCast = currentCast.filter(q => !eliminatedQueens.some(eq => eq.id === q.id));
     }
-    
     currentCast.forEach(q => {
         const queenInFullCast = fullCast.find(fq => fq.id === q.id);
         if (queenInFullCast && !queenInFullCast.trackRecord[episodeNumber - 1]) {
             queenInFullCast.trackRecord[episodeNumber - 1] = 'SAFE';
         }
     });
-
     ui.displayTrackRecord(fullCast, shuffledChallenges, resultsContainer, calculateTrackRecordScore);
     const buttonText = currentCast.length <= 4 ? 'Start The Finale!' : 'Next Episode';
     ui.updateAdvanceButton(buttonText, advanceButton, restartButton);
 }
-
 // -- Finale Functions (Shared) --
 function runFinalePerformancePhase() {
     episodePhase = 'finale';
@@ -316,7 +325,6 @@ function runFinalePerformancePhase() {
         ui.promptForTop2(episodeResults.finalePerformance, phaseSubheader, resultsContainer, advanceButton, handleTop2Selection, calculateTrackRecordScore);
     }
 }
-
 function runFinaleTop2Phase() {
     episodePhase = 'finaleTop2';
     const finaleScores = currentCast.map(queen => {
@@ -329,10 +337,8 @@ function runFinaleTop2Phase() {
         const totalScore = (normalizedTrack * 0.7) + (normalizedPerf * 0.3);
         return { queen, totalScore, trackRecordScore };
     }).sort((a, b) => b.totalScore - a.totalScore);
-
     top2 = [finaleScores[0], finaleScores[1]];
     const eliminated = currentCast.filter(q => !top2.some(t => t.queen.id === q.id));
-    
     eliminated.forEach(elimQueen => {
         const queenInFullCast = fullCast.find(q => q.id === elimQueen.id);
         if (queenInFullCast) {
@@ -341,11 +347,9 @@ function runFinaleTop2Phase() {
             queenInFullCast.epElim = episodeNumber;
         }
     });
-
     ui.displayTop2Results(top2, eliminated, resultsContainer);
     ui.updateAdvanceButton('Lip Sync For The Crown!', advanceButton, restartButton);
 }
-
 function runLipsyncForTheCrownPhase() {
     episodePhase = 'lipsyncForTheCrown';
     if (gameMode === 'standard') {
@@ -362,7 +366,6 @@ function runLipsyncForTheCrownPhase() {
         ui.promptForWinnerCrown(q1, q2, score1, score2, phaseSubheader, resultsContainer, advanceButton, handleWinnerCrowning, calculateTrackRecordScore);
     }
 }
-
 function handleWinnerCrowning(winner, runnerUp) {
     const winnerInFull = fullCast.find(q => q.id === winner.id);
     const runnerUpInFull = fullCast.find(q => q.id === runnerUp.id);
@@ -373,28 +376,23 @@ function handleWinnerCrowning(winner, runnerUp) {
         ui.displayTrackRecord(fullCast, shuffledChallenges, resultsContainer, calculateTrackRecordScore, true);
     });
 }
-
 // =================================================================================
-// 6. MAMA PAO MODE - CALLBACK HANDLERS
+// 6. MAMA PAO MODE - CALLBACK HANDLERS (No major changes)
 // =================================================================================
-
 function handleCustomPlacementsSelection(topIds, bottomIds) {
     episodeResults.userTops = finalScores.filter(s => topIds.includes(s.queen.id));
     episodeResults.userBottoms = finalScores.filter(s => bottomIds.includes(s.queen.id));
     ui.promptForWinner(episodeResults.userTops, phaseSubheader, resultsContainer, advanceButton, handleWinnerSelection, fullCast);
 }
-
 function handleWinnerSelection(winnerIds) {
     episodeResults.placements = [];
     episodeResults.userTops.forEach(s => {
         const placement = winnerIds.includes(s.queen.id) ? 'WIN' : 'HIGH';
         episodeResults.placements.push({ queen: s.queen, placement });
     });
-
     const randomSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
     episodeResults.lipSyncSong = randomSong.name;
     episodeResults.lipSyncType = randomSong.type;
-
     if (currentCast.length <= 5) {
         episodeResults.userBottoms.forEach(s => {
             episodeResults.placements.push({ queen: s.queen, placement: 'BTM' });
@@ -404,7 +402,6 @@ function handleWinnerSelection(winnerIds) {
         ui.promptForBottoms(episodeResults.userBottoms, phaseSubheader, resultsContainer, advanceButton, handleBottomSelection, fullCast);
     }
 }
-
 function handleBottomSelection(safeId) {
     episodeResults.userBottoms.forEach(s => {
         const placement = s.queen.id === safeId ? 'LOW' : 'BTM';
@@ -412,7 +409,6 @@ function handleBottomSelection(safeId) {
     });
     ui.promptForLipSyncWinner(episodeResults, finalScores, fullCast, phaseSubheader, resultsContainer, advanceButton, handleLipSyncDecision);
 }
-
 function handleLipSyncDecision(decision) {
     eliminatedQueens = decision.eliminated || [];
     episodeResults.placements.forEach(p => {
@@ -425,15 +421,11 @@ function handleLipSyncDecision(decision) {
             }
         }
     });
-    
-    // FIX: Directly display results and set up the next phase button,
-    // instead of calling the standard mode's suspense function.
     episodePhase = 'lipsyncResult';
     ui.switchView(simulationView, bodyContainer, 'lipsync');
     ui.displayLipSyncResults(episodeResults, eliminatedQueens, phaseSubheader, resultsContainer);
     ui.updateAdvanceButton('View Track Record', advanceButton, restartButton);
 }
-
 function handleTop2Selection(selectedIds) {
     episodePhase = 'finaleTop2'; 
     top2 = currentCast.filter(q => selectedIds.includes(q.id)).map(queen => ({ queen, trackRecordScore: calculateTrackRecordScore(queen) }));
