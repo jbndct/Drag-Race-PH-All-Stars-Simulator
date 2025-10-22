@@ -198,7 +198,11 @@ function runLipSyncPhase() {
     if (gameMode === 'standard') {
         eliminatedQueens = [];
         const bottomQueens = episodeResults.placements.filter(r => r.placement === 'BTM');
-        episodeResults.lipSyncSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
+        
+        // FIX: Handle the new song object structure
+        const randomSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
+        episodeResults.lipSyncSong = randomSong.name;
+        episodeResults.lipSyncType = randomSong.type;
 
         if (bottomQueens.length < 2) {
             const sortedCastByScore = [...finalScores].sort((a, b) => a.totalScore - b.totalScore);
@@ -240,6 +244,10 @@ function runLipSyncPhase() {
         }
         handlePostLipSync();
     } else {
+        // For Mama Pao Mode, we also need to set the song here so the prompt can use it
+        const randomSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
+        episodeResults.lipSyncSong = randomSong.name;
+        episodeResults.lipSyncType = randomSong.type;
         handlePostLipSync();
     }
 }

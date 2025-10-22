@@ -119,15 +119,34 @@ export const runwayThemes = [
  * Array of iconic Filipino and international songs for Lip Sync For Your Life.
  */
 export const lipsyncSongs = [
-    "'Sirena' by Gloc-9", "'Upuan' by Gloc-9", "'Tala' by Sarah Geronimo", "'Kilometro' by Sarah Geronimo",
-    "'Nosi Balasi' by Sampaguita", "'Rampa' by Vice Ganda", "'Amakabogera' by Maymay Entrata",
-    "'Halik' by Aegis", "'Basang Basa sa Ulan' by Aegis", "'Luha' by Aegis", "'Gento' by SB19",
-    "'Spageti Song' by Sexbomb Girls", "'Bakit Papa?' by Sexbomb Girls", "'Dadalhin' by Regine Velasquez",
-    "'On The Wings of Love' by Regine Velasquez", "'Sundo' by Imago", "'Torete' by Moonstar88",
-    "'Ikot-Ikot' by Sarah Geronimo", "'Paubaya' by Moira Dela Torre", "'Araw-Araw' by Ben&Ben",
-    "'Karera' by BINI", "'Your Love' by Alamid", "'Ako'y Maghihintay' by Jolina Magdangal",
-    "'Chinito' by Yeng Constantino", "'Pop Off Ate!' from DRPH S1", "'BOOGSH!' from DRPH S2",
-    "'Bongga Ka 'Day' by Hotdog", "'Please, Please, Please' by Sabrina Carpenter"
+    { name: "'Sirena' by Gloc-9", type: "Intense Dramatic Rap" },
+    { name: "'Upuan' by Gloc-9", type: "Intense Dramatic Rap" },
+    { name: "'Tala' by Sarah Geronimo", type: "High-Energy Pop" },
+    { name: "'Kilometro' by Sarah Geronimo", type: "High-Energy Pop" },
+    { name: "'Nosi Balasi' by Sampaguita", type: "Pinoy Rock Anthem" },
+    { name: "'Rampa' by Vice Ganda", type: "High-Energy Dance" },
+    { name: "'Amakabogera' by Maymay Entrata", type: "Fierce Dance-Pop" },
+    { name: "'Halik' by Aegis", type: "Power Ballad" },
+    { name: "'Basang Basa sa Ulan' by Aegis", type: "Power Ballad" },
+    { name: "'Luha' by Aegis", type: "Power Ballad" },
+    { name: "'Gento' by SB19", type: "High-Energy Dance" },
+    { name: "'Spageti Song' by Sexbomb Girls", type: "Campy Dance" },
+    { name: "'Bakit Papa?' by Sexbomb Girls", type: "Campy Dance" },
+    { name: "'Dadalhin' by Regine Velasquez", type: "Power Ballad" },
+    { name: "'On The Wings of Love' by Regine Velasquez", type: "Power Ballad" },
+    { name: "'Sundo' by Imago", type: "Alt-Rock Ballad" },
+    { name: "'Torete' by Moonstar88", type: "Alt-Rock Ballad" },
+    { name: "'Ikot-Ikot' by Sarah Geronimo", type: "Emotional Pop" },
+    { name: "'Paubaya' by Moira Dela Torre", type: "Emotional Ballad" },
+    { name: "'Araw-Araw' by Ben&Ben", type: "Emotional Ballad" },
+    { name: "'Karera' by BINI", type: "Bubbly Pop" },
+    { name: "'Your Love' by Alamid", type: "OPM Rock Ballad" },
+    { name: "'Ako'y Maghihintay' by Jolina Magdangal", type: "90s Pop Ballad" },
+    { name: "'Chinito' by Yeng Constantino", type: "Pop-Rock" },
+    { name: "'Pop Off Ate!' from DRPH S1", type: "Fierce Performance" },
+    { name: "'BOOGSH!' from DRPH S2", type: "Fierce Performance" },
+    { name: "'Bongga Ka 'Day' by Hotdog", type: "OPM Disco" },
+    { name: "'Please, Please, Please' by Sabrina Carpenter", type: "Sultry Pop" }
 ];
 
 /**

@@ -210,7 +210,9 @@ export function promptForCustomPlacements(scores, phaseSubheader, resultsContain
     let selectedTops = [];
     let selectedBottoms = [];
     let selectionPhase = 'tops';
-    const topsToSelect = castSize > 5 ? 3 : 2;
+    // FIX: The number of tops is always 3 for a cast of 5 or more.
+    // The original logic (castSize > 5 ? 3 : 2) was incorrect for castSize = 5.
+    const topsToSelect = 3; 
     const bottomsToSelect = castSize > 5 ? 3 : 2;
 
     const render = () => {
@@ -239,7 +241,7 @@ export function promptForCustomPlacements(scores, phaseSubheader, resultsContain
             
             if (selectionPhase === 'bottoms' && isTop) {
                 isDisabled = true;
-                cardClass += ' dimmed'; // FIX: Add dimmed class
+                cardClass += ' dimmed';
             } else if (selectionPhase === 'tops' && selectedTops.length >= topsToSelect && !isTop) {
                 isDisabled = true;
             } else if (selectionPhase === 'bottoms' && selectedBottoms.length >= bottomsToSelect && !isBottom) {
@@ -352,14 +354,17 @@ export function promptForLipSyncWinner(episodeResults, finalScores, fullCast, ph
     const bottomQueens = episodeResults.placements.filter(p => p.placement === 'BTM').map(p => finalScores.find(s => s.queen.id === p.queen.id));
 
     if (bottomQueens.length < 2) {
-        // This case shouldn't happen with the bottom 3 prompt, but it's a safe fallback.
         const decision = { eliminated: [bottomQueens[0].queen] };
         onLipSyncDecision(decision);
         return;
     }
     const [s1, s2] = bottomQueens;
-    episodeResults.lipSyncSong = episodeResults.lipSyncSong || "a powerful anthem";
-    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Two queens stand before me.</h3><p class="text-gray-300">They will lip sync to ${episodeResults.lipSyncSong}. Mama, you decide their fate.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+    
+    // FIX: Update the prompt to include the song type/vibe for better context.
+    const songName = episodeResults.lipSyncSong || "a powerful anthem";
+    const songType = episodeResults.lipSyncType || 'show-stopping';
+    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Two queens stand before me.</h3><p class="text-gray-300">The queens will lip sync to ${songName}.<br>The judges are looking for a <span class="font-semibold text-pink-400">${songType}</span> performance. You decide their fate.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+    
     const createButton = s => {
         const fullQueenData = fullCast.find(q => q.id === s.queen.id);
         const trackRecordHTML = fullQueenData.trackRecord.map(p => `<span class="track-record-pill placement-${p}">${p}</span>`).join(' ') || "No record yet";
