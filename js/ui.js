@@ -73,42 +73,121 @@ export function displayEpisodeHeader(episodeNumber, challenge, episodeHeader, ph
     phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">${challenge.intro}</p>`;
 }
 
-export function displayAllCritiques(scores, resultsContainer) {
-    const runwayThemes = ["Filipiniana Extravaganza", "Pearls & Perlas", "Mythical Creatures", "Jeepney Realness", "Divas of the Decades", "Horror-scope", "Terno-dactyl", "Flower Power", "Miss Universe Couture", "Intergalactic Drag", "Aswang Chic"];
-    const theme = runwayThemes[Math.floor(Math.random() * runwayThemes.length)];
-    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Runway Theme: ${theme}</h3><p class="text-gray-300">The judges have watched the performances and seen the runways. Here are their thoughts...</p></div>`;
-    html += '<div class="space-y-4">';
-    scores.forEach(s => {
-        const scoreLevel = s.totalScore > 75 ? 'good' : s.totalScore > 40 ? 'safe' : 'bad';
-        html += `<div class="critique-card critique-${scoreLevel} bg-black/50 p-4 rounded-lg flex items-start gap-4">
-                    <img src="${s.queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${s.queen.name}">
-                    <div class="flex-1">
-                        <p class="font-bold text-lg">${s.queen.name}</p>
-                        <p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p>
-                        <p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p>
-                    </div>
+
+// NEW: Shows all queens at the start of judging.
+export function displaySafetyCeremony(currentCast, phaseSubheader, resultsContainer) {
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The judges have made some decisions. One by one, the queens will be called.</p>`;
+    let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">';
+    currentCast.forEach(queen => {
+        html += `<div class="queen-bubble bg-black/50 p-3 rounded-lg text-center transition-all duration-500">
+                    <img src="${queen.image}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${queen.name}">
+                    <p class="font-bold text-lg mt-2">${queen.name}</p>
                  </div>`;
     });
-    html += '</div>';
+    html += `</div>`;
     resultsContainer.innerHTML = html;
 }
 
-export function displayPlacements(placements, phaseSubheader, resultsContainer) {
-    phaseSubheader.textContent = "The Judges have made their decisions...";
-    const placementOrder = { 'WIN': 0, 'HIGH': 1, 'SAFE': 2, 'LOW': 3, 'BTM': 4, 'BTM2': 4, 'ELIM': 5 };
-    const sortedPlacements = [...placements].sort((a, b) => placementOrder[a.placement] - placementOrder[b.placement]);
-    let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">';
-    sortedPlacements.forEach(({ queen, placement }) => {
-        const placementText = placement === 'BTM' ? 'BTM 2' : placement;
+// MODIFIED: Renamed from displayAllCritiques and now only shows non-safe queens.
+export function displayFocusedCritiques(scores, placements, phaseSubheader, resultsContainer) {
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The following queens represent the tops and bottoms of the week. The rest of you are safe.</p>`;
+    const nonSafeQueens = placements.filter(p => p.placement !== 'SAFE').map(p => p.queen.id);
+    const scoresToDisplay = scores.filter(s => nonSafeQueens.includes(s.queen.id));
+    
+    // Animate safe queens disappearing
+    document.querySelectorAll('.queen-bubble').forEach(el => {
+        const queenName = el.querySelector('p').textContent;
+        const isSafe = !scoresToDisplay.some(s => s.queen.name === queenName);
+        if (isSafe) {
+            el.classList.add('queen-safe');
+        }
+    });
+
+    setTimeout(() => {
+        let html = '<div class="space-y-4">';
+        scoresToDisplay.forEach(s => {
+            const scoreLevel = s.totalScore > 75 ? 'good' : s.totalScore > 40 ? 'safe' : 'bad';
+            html += `<div class="critique-card critique-${scoreLevel} bg-black/50 p-4 rounded-lg flex items-start gap-4">
+                        <img src="${s.queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${s.queen.name}">
+                        <div class="flex-1">
+                            <p class="font-bold text-lg">${s.queen.name}</p>
+                            <p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p>
+                            <p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p>
+                        </div>
+                     </div>`;
+        });
+        html += '</div>';
+        resultsContainer.innerHTML = html;
+    }, 1500); // 1.5 second delay for the animation
+}
+
+// NEW: Shows the final placements for the tops and bottoms.
+export function displayPlacementReveal(placements, phaseSubheader, resultsContainer) {
+    phaseSubheader.textContent = "After careful deliberation...";
+    const tops = placements.filter(p => ['WIN', 'HIGH'].includes(p.placement));
+    const bottoms = placements.filter(p => ['LOW', 'BTM'].includes(p.placement));
+    
+    let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">`;
+
+    // Display Tops
+    html += `<div><h3 class="font-display text-3xl text-center mb-4 tracking-widest text-blue-400">THE TOPS</h3><div class="space-y-3">`;
+    tops.forEach(({ queen, placement }) => {
         const winClass = placement === 'WIN' ? 'placement-WIN-card' : '';
-        const winImgClass = placement === 'WIN' ? 'placement-WIN-img' : '';
-        html += `<div class="bg-black/50 p-3 rounded-lg text-center ${winClass} transition-all duration-500">
-                    <img src="${queen.image}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 object-cover ${winImgClass}" alt="${queen.name}">
-                    <p class="font-bold text-lg mt-2">${queen.name}</p>
-                    <p class="font-display text-2xl tracking-widest text-pink-400">${placementText}</p>
+        html += `<div class="bg-black/50 p-3 rounded-lg flex items-center gap-4 ${winClass}">
+                    <img src="${queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${queen.name}">
+                    <div>
+                        <p class="font-bold text-lg">${queen.name}</p>
+                        <p class="font-display text-2xl tracking-widest text-pink-400">${placement}</p>
+                    </div>
                  </div>`;
     });
-    resultsContainer.innerHTML = `<div class="text-center mb-4"><p class="text-lg italic text-gray-300">After careful deliberation...</p></div>` + html + `</div>`;
+    html += `</div></div>`;
+    
+    // Display Bottoms
+    html += `<div><h3 class="font-display text-3xl text-center mb-4 tracking-widest text-yellow-500">THE BOTTOMS</h3><div class="space-y-3">`;
+    bottoms.forEach(({ queen, placement }) => {
+        html += `<div class="bg-black/50 p-3 rounded-lg flex items-center gap-4">
+                    <img src="${queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${queen.name}">
+                    <div>
+                        <p class="font-bold text-lg">${queen.name}</p>
+                        <p class="font-display text-2xl tracking-widest text-pink-400">${placement === 'BTM' ? 'BTM 2' : placement}</p>
+                    </div>
+                 </div>`;
+    });
+    html += `</div></div>`;
+
+    html += `</div>`;
+    resultsContainer.innerHTML = html;
+}
+
+
+// NEW: Shows just the two queens lip syncing, without the result.
+export function displayLipSyncMatchup(episodeResults, phaseSubheader, resultsContainer) {
+    phaseSubheader.textContent = "Two queens stand before me...";
+    const lipSyncers = episodeResults.placements.filter(p => p.placement === 'BTM').map(p => p.queen);
+    const song = episodeResults.lipSyncSong || "an epic ballad";
+
+    if (lipSyncers.length < 2) {
+        resultsContainer.innerHTML = `<div class="text-center p-8"><p class="text-xl">An unexpected turn of events... there is no Lip Sync for Your Life tonight.</p></div>`;
+        return;
+    }
+
+    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-3xl mx-auto">
+        <h2 class="font-display text-5xl tracking-widest">LIP SYNC FOR YOUR LIFE</h2>
+        <p class="text-lg">Prepare to lip sync to ${song}!</p>
+        <div class="flex justify-center items-center gap-4 md:gap-8 py-8">
+            <div class="text-center">
+                <img src="${lipSyncers[0].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-gray-400 object-cover" alt="${lipSyncers[0].name}">
+                <p class="font-bold text-xl mt-2">${lipSyncers[0].name}</p>
+            </div>
+            <p class="font-display text-6xl text-pink-500">VS</p>
+            <div class="text-center">
+                <img src="${lipSyncers[1].image}" class="w-32 h-32 rounded-full mx-auto border-4 border-gray-400 object-cover" alt="${lipSyncers[1].name}">
+                <p class="font-bold text-xl mt-2">${lipSyncers[1].name}</p>
+            </div>
+        </div>
+        <p class="text-gray-300 italic text-lg pt-4">"The time has come... to lip sync... for your LIFE! Good luck, and don't f*ck it up."</p>
+    </div>`;
 }
 
 export function displayLipSyncResults(episodeResults, eliminatedQueens, phaseSubheader, resultsContainer) {

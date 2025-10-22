@@ -15,7 +15,7 @@ let fullCast = [];
 let shuffledChallenges = [];
 let top2 = [];
 let episodeNumber = 1;
-let episodePhase = 'performance';
+let episodePhase = 'safetyCeremony'; 
 let episodeResults = {};
 let finalScores = [];
 let eliminatedQueens = [];
@@ -135,7 +135,6 @@ function startCompetition() {
 // =================================================================================
 
 function runEpisode() {
-    episodePhase = 'performance';
     const challenge = shuffledChallenges[(episodeNumber - 1) % shuffledChallenges.length];
 
     finalScores = currentCast.map(q => {
@@ -152,17 +151,33 @@ function runEpisode() {
         s.critiques.runway = generateCritique(s.queen, 'runway', s.runwayScore);
     });
 
-    ui.switchView(simulationView, bodyContainer, episodePhase);
+    ui.switchView(simulationView, bodyContainer, 'placements');
     ui.displayEpisodeHeader(episodeNumber, challenge, episodeHeader, phaseSubheader);
-    ui.displayAllCritiques(finalScores, resultsContainer);
-    ui.updateAdvanceButton('Proceed to Judging', advanceButton, restartButton);
+    
+    // =========================================================================
+    // FIX: Re-implement the branching logic for Standard vs. Mama Pao mode.
+    // =========================================================================
+    if (gameMode === 'standard') {
+        episodeResults.placements = assignPlacements(finalScores);
+        const randomSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
+        episodeResults.lipSyncSong = randomSong.name;
+        episodeResults.lipSyncType = randomSong.type;
+        runSafetyCeremonyPhase();
+    } else { // Mama Pao Mode
+        episodePhase = 'placements';
+        ui.promptForCustomPlacements(finalScores, phaseSubheader, resultsContainer, advanceButton, handleCustomPlacementsSelection, currentCast.length);
+    }
 }
 
 function advanceEpisode() {
+    // This function now correctly handles ONLY the standard mode's step-by-step flow.
+    // Mama Pao mode uses its own callback chain and only re-joins at the end.
     switch (episodePhase) {
-        case 'performance': runJudgingPhase(); break;
-        case 'placements': runLipSyncPhase(); break;
-        case 'lipsync': runTrackRecordPhase(); break;
+        case 'safetyCeremony': runCritiquesPhase(); break;
+        case 'critiques': runPlacementRevealPhase(); break;
+        case 'placementReveal': runLipSyncPhase(); break;
+        case 'lipsync': runLipSyncResultPhase(); break;
+        case 'lipsyncResult': runTrackRecordPhase(); break;
         case 'trackRecord':
             if (currentCast.length <= 4) {
                 episodePhase = 'finale';
@@ -178,41 +193,43 @@ function advanceEpisode() {
     }
 }
 
-function runJudgingPhase() {
-    episodePhase = 'placements';
-    ui.switchView(simulationView, bodyContainer, episodePhase);
+// -- Standard Mode Functions --
+function runSafetyCeremonyPhase() {
+    episodePhase = 'safetyCeremony';
+    ui.displaySafetyCeremony(currentCast, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton('Call The Safe Queens', advanceButton, restartButton);
+}
 
-    if (gameMode === 'standard') {
-        episodeResults.placements = assignPlacements(finalScores);
-        ui.displayPlacements(episodeResults.placements, phaseSubheader, resultsContainer);
-        ui.updateAdvanceButton('Watch The Lip Sync', advanceButton, restartButton);
-    } else {
-        ui.promptForCustomPlacements(finalScores, phaseSubheader, resultsContainer, advanceButton, handleCustomPlacementsSelection, currentCast.length);
-    }
+function runCritiquesPhase() {
+    episodePhase = 'critiques';
+    ui.displayFocusedCritiques(finalScores, episodeResults.placements, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton("Judges' Deliberations", advanceButton, restartButton);
+}
+
+function runPlacementRevealPhase() {
+    episodePhase = 'placementReveal';
+    ui.displayPlacementReveal(episodeResults.placements, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton('Lip Sync For Your Life!', advanceButton, restartButton);
 }
 
 function runLipSyncPhase() {
     episodePhase = 'lipsync';
     ui.switchView(simulationView, bodyContainer, episodePhase);
+    ui.displayLipSyncMatchup(episodeResults, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton("See The Results", advanceButton, restartButton);
+}
 
-    if (gameMode === 'standard') {
-        eliminatedQueens = [];
-        const bottomQueens = episodeResults.placements.filter(r => r.placement === 'BTM');
-        
-        // FIX: Handle the new song object structure
-        const randomSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
-        episodeResults.lipSyncSong = randomSong.name;
-        episodeResults.lipSyncType = randomSong.type;
+function runLipSyncResultPhase() {
+    episodePhase = 'lipsyncResult';
+    eliminatedQueens = [];
+    const bottomQueens = episodeResults.placements.filter(r => r.placement === 'BTM');
 
-        if (bottomQueens.length < 2) {
-            const sortedCastByScore = [...finalScores].sort((a, b) => a.totalScore - b.totalScore);
-            eliminatedQueens.push(bottomQueens.length > 0 ? bottomQueens[0].queen : sortedCastByScore[0].queen);
-            const loserPlacement = episodeResults.placements.find(p => p.queen.id === eliminatedQueens[0].id);
-            if (loserPlacement) loserPlacement.placement = 'ELIM';
-            handlePostLipSync();
-            return;
-        }
-
+    if (bottomQueens.length < 2) {
+        const sortedCastByScore = [...finalScores].sort((a, b) => a.totalScore - b.totalScore);
+        eliminatedQueens.push(bottomQueens.length > 0 ? bottomQueens[0].queen : sortedCastByScore[0].queen);
+        const loserPlacement = episodeResults.placements.find(p => p.queen.id === eliminatedQueens[0].id);
+        if (loserPlacement) loserPlacement.placement = 'ELIM';
+    } else {
         const [q1Result, q2Result] = bottomQueens.map(p => finalScores.find(s => s.queen.id === p.queen.id));
         const q1Score = q1Result.queen.stats.lipsync * 10 + Math.random() * 25;
         const q2Score = q2Result.queen.stats.lipsync * 10 + Math.random() * 25;
@@ -220,10 +237,10 @@ function runLipSyncPhase() {
         if (doubleSashayCount < 1 && q1Score < 30 && q2Score < 30 && Math.random() < 0.1) {
             eliminatedQueens = [q1Result.queen, q2Result.queen];
             doubleSashayCount++;
-            episodeResults.placements.forEach(p => { if(p.queen.id === q1Result.queen.id || p.queen.id === q2Result.queen.id) p.placement = 'ELIM'; });
+            episodeResults.placements.forEach(p => { if (p.queen.id === q1Result.queen.id || p.queen.id === q2Result.queen.id) p.placement = 'ELIM'; });
         } else if (doubleShantayCount < 2 && (q1Score > 95 && q2Score > 95) && Math.random() < 0.2) {
             doubleShantayCount++;
-            episodeResults.placements.forEach(p => { if(p.queen.id === q1Result.queen.id || p.queen.id === q2Result.queen.id) p.placement = 'BTM2'; });
+            episodeResults.placements.forEach(p => { if (p.queen.id === q1Result.queen.id || p.queen.id === q2Result.queen.id) p.placement = 'BTM2'; });
         } else {
             const q1LipSyncs = q1Result.queen.trackRecord.filter(p => p === 'BTM' || p === 'BTM2').length;
             const q2LipSyncs = q2Result.queen.trackRecord.filter(p => p === 'BTM' || p === 'BTM2').length;
@@ -242,21 +259,13 @@ function runLipSyncPhase() {
             episodeResults.placements.find(p => p.queen.id === winner.queen.id).placement = 'BTM2';
             episodeResults.placements.find(p => p.queen.id === loser.queen.id).placement = 'ELIM';
         }
-        handlePostLipSync();
-    } else {
-        // For Mama Pao Mode, we also need to set the song here so the prompt can use it
-        const randomSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
-        episodeResults.lipSyncSong = randomSong.name;
-        episodeResults.lipSyncType = randomSong.type;
-        handlePostLipSync();
     }
-}
-
-function handlePostLipSync() {
+    
     ui.displayLipSyncResults(episodeResults, eliminatedQueens, phaseSubheader, resultsContainer);
     ui.updateAdvanceButton('View Track Record', advanceButton, restartButton);
 }
 
+// -- Shared Function --
 function runTrackRecordPhase() {
     episodePhase = 'trackRecord';
     ui.switchView(simulationView, bodyContainer, episodePhase);
@@ -289,6 +298,7 @@ function runTrackRecordPhase() {
     ui.updateAdvanceButton(buttonText, advanceButton, restartButton);
 }
 
+// -- Finale Functions (Shared) --
 function runFinalePerformancePhase() {
     episodePhase = 'finale';
     ui.switchView(simulationView, bodyContainer, episodePhase);
@@ -381,6 +391,10 @@ function handleWinnerSelection(winnerIds) {
         episodeResults.placements.push({ queen: s.queen, placement });
     });
 
+    const randomSong = lipsyncSongs[Math.floor(Math.random() * lipsyncSongs.length)];
+    episodeResults.lipSyncSong = randomSong.name;
+    episodeResults.lipSyncType = randomSong.type;
+
     if (currentCast.length <= 5) {
         episodeResults.userBottoms.forEach(s => {
             episodeResults.placements.push({ queen: s.queen, placement: 'BTM' });
@@ -402,14 +416,22 @@ function handleBottomSelection(safeId) {
 function handleLipSyncDecision(decision) {
     eliminatedQueens = decision.eliminated || [];
     episodeResults.placements.forEach(p => {
-        if (decision.shantay && p.placement === 'BTM') p.placement = 'BTM2';
-        else if (decision.sashay && p.placement === 'BTM') p.placement = 'ELIM';
-        else if (decision.winner && decision.loser) {
-            if (p.queen.id === decision.winner.id) p.placement = 'BTM2';
-            if (p.queen.id === decision.loser.id) p.placement = 'ELIM';
+        if (p.placement === 'BTM') {
+            if (decision.shantay) p.placement = 'BTM2';
+            else if (decision.sashay) p.placement = 'ELIM';
+            else if (decision.winner && decision.loser) {
+                if (p.queen.id === decision.winner.id) p.placement = 'BTM2';
+                if (p.queen.id === decision.loser.id) p.placement = 'ELIM';
+            }
         }
     });
-    runLipSyncPhase();
+    
+    // FIX: Directly display results and set up the next phase button,
+    // instead of calling the standard mode's suspense function.
+    episodePhase = 'lipsyncResult';
+    ui.switchView(simulationView, bodyContainer, 'lipsync');
+    ui.displayLipSyncResults(episodeResults, eliminatedQueens, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton('View Track Record', advanceButton, restartButton);
 }
 
 function handleTop2Selection(selectedIds) {
@@ -442,4 +464,3 @@ window.addEventListener('load', () => {
     ui.updateSelectionUI(selectedCast, castList, castPlaceholder, castCounter, startButton, instructions, MIN_CAST_SIZE, MAX_CAST_SIZE);
     ui.switchView(menuView, bodyContainer, episodePhase);
 });
-

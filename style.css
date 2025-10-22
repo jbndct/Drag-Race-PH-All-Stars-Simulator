@@ -188,3 +188,11 @@ body::after {
      border-color: #4B5563;
 }
 
+.queen-bubble {
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.queen-safe {
+    opacity: 0;
+    transform: scale(0.8);
+}
