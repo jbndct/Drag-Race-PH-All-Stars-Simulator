@@ -23,8 +23,8 @@ let doubleShantayCount = 0;
 let doubleSashayCount = 0;
 
 // -- Constants --
-const MAX_CAST_SIZE = 15;
-const MIN_CAST_SIZE = 8;
+const MAX_CAST_SIZE = 20;
+const MIN_CAST_SIZE = 6;
 
 // -- DOM Element References --
 const bodyContainer = document.getElementById('body-container');
