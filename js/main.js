@@ -158,21 +158,45 @@ function runEpisode() {
 }
 
 function advanceEpisode() {
+    // FIX: Stop any pending animations (like safety reveals) before proceeding
+    ui.stopAllAnimations();
+
     switch (episodePhase) {
-        case 'judgesCritiques': runSafetyCeremonyPhase(); break;
-        case 'safetyCeremony':
-            ui.revealAllSafeQueens(episodeResults.safeQueens, phaseSubheader, advanceButton);
-            episodePhase = 'gatherTopsAndBottoms';
-            ui.updateAdvanceButton("Proceed to Critiques", advanceButton, restartButton);
+        case 'judgesCritiques':
+            runSafetyCeremonyPhase();
             break;
-        case 'gatherTopsAndBottoms': runTopsAndBottomsCritiquesPhase(); break;
-        case 'topsAndBottomsCritiques': runTopsRevealPhase(); break;
-        case 'topsReveal': runWinnerRevealPhase(); break;
-        case 'winnerReveal': runBottomsRevealPhase(); break;
-        case 'bottomsReveal': runLowRevealPhase(); break;
-        case 'lowReveal': runLipSyncPhase(); break;
-        case 'lipsync': runLipSyncResultPhase(); break;
-        case 'lipsyncResult': runTrackRecordPhase(); break;
+        case 'safetyCeremony': // When "Reveal Safe Queens" is clicked
+            ui.revealAllSafeQueens(episodeResults.safeQueens, phaseSubheader); // Start animation
+            episodePhase = 'gatheringLineup'; // New intermediate phase *before* displaying the lineup
+            ui.updateAdvanceButton("See Tops & Bottoms", advanceButton, restartButton); // Update button immediately
+            break;
+        case 'gatheringLineup': // When "See Tops & Bottoms" is clicked
+            runGatherTopsAndBottomsPhase(); // Display the lineup screen
+            break;
+        case 'gatherTopsAndBottoms': // When "Proceed to Critiques" is clicked (after lineup)
+            runTopsAndBottomsCritiquesPhase();
+            break;
+        case 'topsAndBottomsCritiques':
+            runTopsRevealPhase();
+            break;
+        case 'topsReveal':
+            runWinnerRevealPhase();
+            break;
+        case 'winnerReveal':
+            runBottomsRevealPhase();
+            break;
+        case 'bottomsReveal':
+            runLowRevealPhase();
+            break;
+        case 'lowReveal':
+            runLipSyncPhase();
+            break;
+        case 'lipsync':
+            runLipSyncResultPhase();
+            break;
+        case 'lipsyncResult':
+            runTrackRecordPhase();
+            break;
         case 'trackRecord':
             if (currentCast.length <= 4) {
                 episodePhase = 'finale';
@@ -196,20 +220,24 @@ function runJudgesCritiquesPhase() {
 }
 
 function runSafetyCeremonyPhase() {
+    // If few queens or no safe queens, skip straight to the lineup
     if (currentCast.length <= 6 || episodeResults.safeQueens.length === 0) {
-        runGatherTopsAndBottomsPhase();
-    } else {
-        episodePhase = 'safetyCeremony';
-        ui.displaySafetyCeremony(currentCast, phaseSubheader, resultsContainer);
-        ui.updateAdvanceButton('Reveal Safe Queens', advanceButton, restartButton);
+        episodePhase = 'gatheringLineup'; // Set phase to lineup intermediate
+        runGatherTopsAndBottomsPhase(); // Display the lineup directly
+        return; 
     }
+    // Otherwise, show the safety ceremony screen
+    episodePhase = 'safetyCeremony';
+    ui.displaySafetyCeremony(currentCast, phaseSubheader, resultsContainer);
+    ui.updateAdvanceButton('Reveal Safe Queens', advanceButton, restartButton);
 }
 
 function runGatherTopsAndBottomsPhase() {
-    episodePhase = 'gatherTopsAndBottoms';
+    episodePhase = 'gatherTopsAndBottoms'; // Set phase *when displaying* the lineup
     ui.displayGatheringScreen(episodeResults.placements, phaseSubheader, resultsContainer);
-    ui.updateAdvanceButton("Proceed to Critiques", advanceButton, restartButton);
+    ui.updateAdvanceButton("Proceed to Critiques", advanceButton, restartButton); // Button for next step
 }
+
 
 function runTopsAndBottomsCritiquesPhase() {
     episodePhase = 'topsAndBottomsCritiques';
@@ -456,3 +484,4 @@ window.addEventListener('load', () => {
     ui.updateSelectionUI(selectedCast, castList, castPlaceholder, castCounter, startButton, instructions, MIN_CAST_SIZE, MAX_CAST_SIZE);
     ui.switchView(menuView, bodyContainer, episodePhase);
 });
+

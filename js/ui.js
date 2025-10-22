@@ -3,6 +3,18 @@
 // Handles all direct DOM manipulation and rendering.
 // =================================================================================
 
+// FIX: Add a variable to track pending animations
+let currentAnimationTimers = [];
+
+/**
+ * Stops all pending animation timeouts (e.g., safe queen reveals).
+ */
+export function stopAllAnimations() {
+    currentAnimationTimers.forEach(timerId => clearTimeout(timerId));
+    currentAnimationTimers = []; // Clear the array
+}
+
+
 // ... (populateQueenGrid can stay the same)
 export function populateQueenGrid(queens, queenGrid, onQueenClick) {
     queenGrid.innerHTML = '';
@@ -41,7 +53,8 @@ export function switchView(viewToShow, bodyContainer, episodePhase) {
         const phaseToBg = {
             'judgesCritiques': 'var(--bg-image-challenge)', 
             'safetyCeremony': 'var(--bg-image-runway)',
-            'gatherTopsAndBottoms': 'var(--bg-image-runway)',
+            'gatheringLineup': 'var(--bg-image-runway)', // Background for the intermediate phase
+            'gatherTopsAndBottoms': 'var(--bg-image-runway)', // Background for the lineup screen
             'topsAndBottomsCritiques': 'var(--bg-image-runway)',
             'topsReveal': 'var(--bg-image-runway)',
             'winnerReveal': 'var(--bg-image-runway)',
@@ -83,21 +96,17 @@ export function displayEpisodeHeader(episodeNumber, challenge, episodeHeader, ph
 // =================================================================================
 
 export function displayJudgesCritiques(scores, phaseSubheader, resultsContainer) {
-    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The judges have reviewed the performances and runways. Here's how each queen stacked up...</p>`;
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The judges have reviewed the performances and runways. Here's how each queen did...</p>`;
+    // FIX: Show only sentence critiques here
     let html = '<div class="space-y-4">';
     scores.forEach(s => {
-        html += `<div class="critique-card bg-black/50 p-4 rounded-lg flex items-start gap-4">
+        const scoreLevel = s.totalScore > 75 ? 'good' : s.totalScore > 40 ? 'safe' : 'bad';
+        html += `<div class="critique-card critique-${scoreLevel} bg-black/50 p-4 rounded-lg flex items-start gap-4">
                     <img src="${s.queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${s.queen.name}">
                     <div class="flex-1">
                         <p class="font-bold text-lg">${s.queen.name}</p>
-                        <div class="flex gap-4 items-center mt-2">
-                           <p class="text-sm font-semibold text-blue-400">Challenge:</p>
-                           ${generateStarRating(s.perfScore)}
-                        </div>
-                        <div class="flex gap-4 items-center mt-1">
-                           <p class="text-sm font-semibold text-pink-400">Runway:</p>
-                           ${generateStarRating(s.runwayScore)}
-                        </div>
+                        <p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p>
+                        <p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p>
                     </div>
                  </div>`;
     });
@@ -118,33 +127,42 @@ export function displaySafetyCeremony(currentCast, phaseSubheader, resultsContai
     resultsContainer.innerHTML = html;
 }
 
-export function revealAllSafeQueens(safeQueens, phaseSubheader, advanceButton) {
-    advanceButton.disabled = true;
+export function revealAllSafeQueens(safeQueens, phaseSubheader) {
+    // FIX: Removed the final subheader update from here.
+    stopAllAnimations(); // Clear any previous ones just in case
     let delay = 500;
     const reversedSafeQueens = [...safeQueens].reverse();
 
-    reversedSafeQueens.forEach(queen => {
-        setTimeout(() => {
-            const queenEl = document.querySelector(`.queen-bubble[data-queen-id="${queen.id}"]`);
-            if (queenEl) {
-                queenEl.classList.add('queen-safe');
-                phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider animate-pulse">${queen.name}, you are safe.</p>`;
-            }
-        }, delay);
-        delay += 1200;
-    });
-
-    setTimeout(() => {
-        phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">The rest of you represent the tops and bottoms of the week.</p>`;
-        advanceButton.disabled = false;
-    }, delay);
+    if (reversedSafeQueens.length > 0) {
+        reversedSafeQueens.forEach(queen => {
+            const timerId = setTimeout(() => {
+                const queenEl = document.querySelector(`.queen-bubble[data-queen-id="${queen.id}"]`);
+                if (queenEl) {
+                    queenEl.classList.add('queen-safe');
+                    // Only update subheader if animation hasn't been cancelled
+                    if (currentAnimationTimers.includes(timerId)) {
+                        phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider animate-pulse">${queen.name}, you are safe.</p>`;
+                    }
+                }
+                // Remove this timer from the list once it has run
+                currentAnimationTimers = currentAnimationTimers.filter(id => id !== timerId);
+            }, delay);
+            currentAnimationTimers.push(timerId); // Add timer to tracking array
+            delay += 1200; // Time between each safe queen reveal
+        });
+        // No final timeout needed here anymore for subheader
+    } else {
+       // If no safe queens, do nothing here, the next screen handles the subheader
+    }
 }
 
 
 export function displayGatheringScreen(placements, phaseSubheader, resultsContainer) {
+    // FIX: Set the correct subheader text for this screen
     phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">You represent the tops and bottoms of the week.</p>`;
     const nonSafeQueens = placements.filter(p => p.placement !== 'SAFE').map(p => p.queen);
     
+    // Display only the non-safe queens in a clean grid
     let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">';
     nonSafeQueens.forEach(queen => {
         html += `<div class="queen-bubble bg-black/50 p-3 rounded-lg text-center" data-queen-id="${queen.id}">
@@ -157,7 +175,8 @@ export function displayGatheringScreen(placements, phaseSubheader, resultsContai
 }
 
 export function displayTopsAndBottomsCritiques(scores, placements, phaseSubheader, resultsContainer) {
-    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">You represent the tops and bottoms of the week.</p>`;
+    phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">It's time for critiques...</p>`;
+    // FIX: Show both sentence critiques AND star ratings
     const nonSafeQueens = placements.filter(p => p.placement !== 'SAFE').map(p => p.queen.id);
     const scoresToDisplay = scores.filter(s => nonSafeQueens.includes(s.queen.id));
     
@@ -169,7 +188,9 @@ export function displayTopsAndBottomsCritiques(scores, placements, phaseSubheade
                     <div class="flex-1">
                         <p class="font-bold text-lg">${s.queen.name}</p>
                         <p class="text-sm mt-2"><span class="font-semibold text-blue-400">Challenge:</span> ${s.critiques.performance}</p>
-                        <p class="text-sm mt-1"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p>
+                        <div class="flex gap-1 items-center mt-1"> ${generateStarRating(s.perfScore)} </div>
+                        <p class="text-sm mt-2"><span class="font-semibold text-pink-400">Runway:</span> ${s.critiques.runway}</p>
+                        <div class="flex gap-1 items-center mt-1"> ${generateStarRating(s.runwayScore)} </div>
                     </div>
                  </div>`;
     });
@@ -179,64 +200,113 @@ export function displayTopsAndBottomsCritiques(scores, placements, phaseSubheade
 export function displayTops(placements, phaseSubheader, resultsContainer) {
     phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">Now for the tops...</p>`;
     const tops = placements.filter(p => ['WIN', 'HIGH'].includes(p.placement));
-    let html = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4">`;
+    
+    // Make grid centered and more spacious for larger images
+    let html = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6 justify-center max-w-4xl mx-auto">`;
     tops.forEach(({ queen, placement }) => {
-        html += `<div class="bg-black/50 p-3 rounded-lg text-center" data-queen-id="${queen.id}">
-                    <img src="${queen.image}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${queen.name}">
+        // Increased image size and container styling for centering
+        html += `<div class="bg-black/50 p-3 rounded-lg text-center flex flex-col items-center" data-queen-id="${queen.id}">
+                    <img src="${queen.image}" class="w-48 h-48 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${queen.name}">
                     <p class="font-bold text-lg mt-2">${queen.name}</p>
                  </div>`;
     });
     html += `</div>`;
     resultsContainer.innerHTML = html;
 }
+
 export function revealWinner(placements, phaseSubheader, resultsContainer) {
     const winners = placements.filter(p => p.placement === 'WIN');
-    if (winners.length > 0) {
-        if (winners.length === 1) {
-            const winner = winners[0];
-            phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">Condragulations ${winner.queen.name}, you are the winner of this week's challenge.</p>`;
-            const winnerEl = resultsContainer.querySelector(`[data-queen-id="${winner.queen.id}"]`);
-            if (winnerEl) {
-                winnerEl.classList.add('placement-WIN-card');
-                winnerEl.querySelector('img').classList.add('placement-WIN-img');
-            }
-        } else {
-            const winnerNames = winners.map(w => w.queen.name).join(' and ');
-            phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">Condragulations ${winnerNames}, you are BOTH winners of this week's challenge.</p>`;
-            winners.forEach(winner => {
-                const winnerEl = resultsContainer.querySelector(`[data-queen-id="${winner.queen.id}"]`);
-                if (winnerEl) {
-                    winnerEl.classList.add('placement-WIN-card');
-                    winnerEl.querySelector('img').classList.add('placement-WIN-img');
-                }
-            });
-        }
+    const highs = placements.filter(p => p.placement === 'HIGH');
+
+    if (winners.length === 0) return; // Should not happen, but safeguard
+
+    // Rebuild the HTML entirely for the grand reveal
+    let winnerHTML = '<div class="flex flex-col items-center justify-center gap-4">';
+    if (winners.length === 1) {
+        phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">Condragulations ${winners[0].queen.name}, you are the winner of this week's challenge.</p>`;
+    } else {
+        const winnerNames = winners.map(w => w.queen.name).join(' and ');
+        phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">Condragulations ${winnerNames}, you are BOTH winners of this week's challenge.</p>`;
     }
+
+    // Winner(s) section (BIG)
+    winnerHTML += '<div class="flex flex-wrap justify-center gap-6">';
+    winners.forEach(winner => {
+        winnerHTML += `<div class="text-center placement-WIN-card p-2 rounded-lg">
+                        <img src="${winner.queen.image}" class="w-64 h-64 rounded-full mx-auto border-4 border-amber-400 object-cover placement-WIN-img" alt="${winner.queen.name}">
+                        <p class="font-bold text-3xl font-display tracking-wider mt-2">${winner.queen.name}</p>
+                      </div>`;
+    });
+    winnerHTML += '</div>';
+
+    // High queens section (small)
+    if (highs.length > 0) {
+        winnerHTML += '<div class="flex flex-wrap justify-center gap-4 mt-8 opacity-70">';
+        highs.forEach(highQueen => {
+            winnerHTML += `<div class="text-center">
+                            <img src="${highQueen.queen.image}" class="w-32 h-32 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${highQueen.queen.name}">
+                            <p class="font-bold text-lg mt-2">${highQueen.queen.name}</p>
+                          </div>`;
+        });
+        winnerHTML += '</div>';
+    }
+    
+    winnerHTML += '</div>';
+    resultsContainer.innerHTML = winnerHTML;
 }
+
 export function displayBottoms(placements, phaseSubheader, resultsContainer) {
     phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto">...and the bottoms.</p>`;
     const bottoms = placements.filter(p => ['LOW', 'BTM'].includes(p.placement));
-    let html = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4">`;
+
+    // Make grid centered and more spacious for larger images
+    let html = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6 justify-center max-w-4xl mx-auto">`;
     bottoms.forEach(({ queen, placement }) => {
-        html += `<div class="bg-black/50 p-3 rounded-lg text-center" data-queen-id="${queen.id}">
-                    <img src="${queen.image}" class="w-24 h-24 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${queen.name}">
+        // Increased image size and container styling for centering
+        html += `<div class="bg-black/50 p-3 rounded-lg text-center flex flex-col items-center" data-queen-id="${queen.id}">
+                    <img src="${queen.image}" class="w-48 h-48 rounded-full mx-auto border-4 border-gray-600 object-cover" alt="${queen.name}">
                     <p class="font-bold text-lg mt-2">${queen.name}</p>
                  </div>`;
     });
     html += `</div>`;
     resultsContainer.innerHTML = html;
 }
+
 export function revealLow(placements, phaseSubheader, resultsContainer) {
     const lowQueen = placements.find(p => p.placement === 'LOW');
+    const bottoms = placements.filter(p => p.placement === 'BTM');
+
+    // Rebuild HTML to show safe queen separately from bottoms
+    let html = '<div class="flex flex-col items-center justify-center gap-8">';
+
     if (lowQueen) {
         phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">${lowQueen.queen.name}, you are safe.</p>`;
-        const lowEl = resultsContainer.querySelector(`[data-queen-id="${lowQueen.queen.id}"]`);
-        if (lowEl) {
-            lowEl.classList.add('queen-safe');
-        }
+        
+        // Low queen (safe)
+        html += `<div class="text-center opacity-70">
+                    <img src="${lowQueen.queen.image}" class="w-40 h-40 rounded-full mx-auto border-4 border-gray-500 object-cover" alt="${lowQueen.queen.name}">
+                    <p class="font-bold text-xl mt-2">${lowQueen.queen.name}</p>
+                    <p class="font-display text-lg tracking-wider text-gray-400">SAFE</p>
+                 </div>`;
+
     } else {
         phaseSubheader.innerHTML = `<p class="max-w-2xl mx-auto text-2xl font-display tracking-wider">This week, there is no low placement.</p>`;
     }
+
+    // Bottom queens (BTM)
+    if (bottoms.length > 0) {
+        html += '<div class="flex flex-wrap justify-center gap-6">';
+        bottoms.forEach(btmQueen => {
+            html += `<div class="text-center p-2 rounded-lg bg-black/50 border-2 border-red-800">
+                        <img src="${btmQueen.queen.image}" class="w-48 h-48 rounded-full mx-auto border-4 border-red-600 object-cover" alt="${btmQueen.queen.name}">
+                        <p class="font-bold text-2xl mt-2">${btmQueen.queen.name}</p>
+                      </div>`;
+        });
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    resultsContainer.innerHTML = html;
 }
 
 export function displayLipSyncMatchup(episodeResults, phaseSubheader, resultsContainer) {
@@ -560,3 +630,4 @@ export function promptForWinnerCrown(q1, q2, score1, score2, phaseSubheader, res
     });
     advanceButton.classList.add('hidden');
 }
+
