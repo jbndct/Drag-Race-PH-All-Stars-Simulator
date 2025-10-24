@@ -525,7 +525,7 @@ export function promptForCustomPlacements(scores, phaseSubheader, resultsContain
         if (confirmBtn) {
             confirmBtn.addEventListener('click', () => {
                 if (selectionPhase === 'tops') {
-                    if (castSize <= 5) {
+                    if (castSize <= 6) {
                         const remainingQueens = scores.filter(s => !selectedTops.includes(s.queen.id));
                         selectedBottoms = remainingQueens.map(s => s.queen.id);
                         onPlacementsSelected(selectedTops, selectedBottoms);
