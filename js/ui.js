@@ -374,12 +374,61 @@ export function displayTrackRecord(fullCast, shuffledChallenges, resultsContaine
     tableHTML += `</tbody></table></div>`;
     resultsContainer.innerHTML = tableHTML;
 }
-export function displayTop2Results(top2, eliminated, resultsContainer) {
-    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-2xl mx-auto"><p class="text-2xl font-display tracking-widest">Based on the final performance and season-long track record, the Top 2 queens are...</p><div class="p-4 rounded-lg bg-green-900/50 text-3xl font-display tracking-widest flex items-center justify-center gap-4"><img src="${top2[0].queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${top2[0].queen.name}">${top2[0].queen.name}</div><div class="p-4 rounded-lg bg-green-900/50 text-3xl font-display tracking-widest flex items-center justify-center gap-4"><img src="${top2[1].queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${top2[1].queen.name}">${top2[1].queen.name}</div><p class="text-xl pt-4">This means, ${eliminated.map(q => q.name).join(' and ')}, I'm sorry my dears but this is not your time. Sashay away.</p></div>`;
+
+/**
+ * Renamed from displayTop2Results
+ * Displays the chosen finalists (2-4 queens).
+ */
+export function displayFinaleFinalists(finalists, eliminated, resultsContainer) {
+    let finalistsHTML = '';
+    finalists.forEach(finalist => {
+        finalistsHTML += `<div class="p-4 rounded-lg bg-green-900/50 text-3xl font-display tracking-widest flex items-center justify-center gap-4">
+                            <img src="${finalist.queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${finalist.queen.name}">
+                            ${finalist.queen.name}
+                          </div>`;
+    });
+
+    const eliminatedNames = eliminated.map(q => q.name).join(' and ');
+    const eliminatedText = eliminated.length > 0 ? `<p class="text-xl pt-4">This means, ${eliminatedNames}, I'm sorry my dears but this is not your time. Sashay away.</p>` : '';
+
+    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-2xl mx-auto">
+                                    <p class="text-2xl font-display tracking-widest">Based on the final performance and season-long track record, your finalists are...</p>
+                                    <div class="space-y-3">${finalistsHTML}</div>
+                                    ${eliminatedText}
+                                  </div>`;
 }
-export function displayWinner(winner, runnerUp, resultsContainer) {
-    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-2xl mx-auto"><p class="text-2xl font-display tracking-widest">Ladies, the decision is final...</p><p class="text-3xl font-display tracking-widest">The next Drag Race Philippines Superstar is...</p><div class="py-8"><img src="${winner.image}" class="w-48 h-48 rounded-full object-cover mx-auto border-8 border-amber-400 placement-WIN-img" alt="${winner.name}"><p class="text-7xl md:text-8xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse mt-4">${winner.name}</p></div><p class="text-3xl font-display tracking-widest">Condragulations, you're a winner, baby!</p><p class="text-xl pt-4">And to our runner-up, ${runnerUp.name}, you are and will always be a star. Now, prance, my queen!</p></div>`;
+
+/**
+ * Displays the final winner and runners-up.
+ * @param {object} winner - The winning queen object.
+ * @param {Array<object>} runnersUp - An array of runner-up queen objects.
+ */
+export function displayWinner(winner, runnersUp, resultsContainer) {
+    let runnersUpText = '';
+    if (runnersUp.length === 1) {
+        runnersUpText = `And to our runner-up, ${runnersUp[0].name}, you are and will always be a star.`;
+    } else if (runnersUp.length > 1) {
+        let names = runnersUp.map(r => r.name).join(', ');
+        // Find last comma
+        const lastCommaIndex = names.lastIndexOf(',');
+        if (lastCommaIndex !== -1) {
+            names = names.substring(0, lastCommaIndex) + ' and' + names.substring(lastCommaIndex + 1);
+        }
+        runnersUpText = `And to our runners-up, ${names}, you are and will always be stars.`;
+    }
+    
+    resultsContainer.innerHTML = `<div class="text-center space-y-4 max-w-2xl mx-auto">
+                                    <p class="text-2xl font-display tracking-widest">Ladies, the decision is final...</p>
+                                    <p class="text-3xl font-display tracking-widest">The next Drag Race Philippines Superstar is...</p>
+                                    <div class="py-8">
+                                        <img src="${winner.image}" class="w-48 h-48 rounded-full object-cover mx-auto border-8 border-amber-400 placement-WIN-img" alt="${winner.name}">
+                                        <p class="text-7xl md:text-8xl font-display tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse mt-4">${winner.name}</p>
+                                    </div>
+                                    <p class="text-3xl font-display tracking-widest">Condragulations, you're a winner, baby!</p>
+                                    <p class="text-xl pt-4">${runnersUpText} Now, prance, my queens!</p>
+                                  </div>`;
 }
+
 export function updateAdvanceButton(text, advanceButton, restartButton, hide = false) {
     advanceButton.textContent = text;
     advanceButton.classList.toggle('hidden', hide);
@@ -584,50 +633,123 @@ export function promptForLipSyncWinner(episodeResults, finalScores, fullCast, ph
     advanceButton.classList.add('hidden');
 }
 
+/**
+ * MODIFIED: Allows selecting 2-4 finalists and adds a confirm button.
+ */
 export function promptForTop2(finalePerformances, phaseSubheader, resultsContainer, advanceButton, onTop2Selected, calculateTrackRecordScore) {
     phaseSubheader.textContent = 'Four Queens, one crown.';
-    let html = `<div class="text-center mb-6"><h3 class="text-2xl font-display tracking-widest text-pink-400">Four Queens, one crown.</h3><p class="text-gray-300">Based on their final performance and their journey so far, choose your Top 2.</p></div><div class="space-y-3">`;
+    let html = `<div class="text-center mb-6">
+                    <h3 class="text-2xl font-display tracking-widest text-pink-400">Four Queens, one crown.</h3>
+                    <p class="text-gray-300">Based on their final performance and their journey so far, select 2 to 4 finalists.</p>
+                </div>
+                <div class="space-y-3">`;
     let selectedTop2 = [];
+    
     finalePerformances.forEach(s => {
-        html += `<button class="secondary-button w-full p-4 rounded-lg text-left flex items-center gap-4" data-top2-id="${s.queen.id}"><img src="${s.queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${s.queen.name}"><div class="flex-1"><div class="flex justify-between items-center"><span class="text-lg font-bold">${s.queen.name}</span><div><span class="text-sm text-gray-400">Finale Perf: ${s.score.toFixed(0)}</span><span class="text-sm text-gray-400 ml-2">Track Record: ${calculateTrackRecordScore(s.queen)}</span></div></div></div></button>`;
+        html += `<button class="secondary-button w-full p-4 rounded-lg text-left flex items-center gap-4" data-top2-id="${s.queen.id}">
+                    <img src="${s.queen.image}" class="w-16 h-16 rounded-full object-cover" alt="${s.queen.name}">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold">${s.queen.name}</span>
+                            <div>
+                                <span class="text-sm text-gray-400">Finale Perf: ${s.score.toFixed(0)}</span>
+                                <span class="text-sm text-gray-400 ml-2">Track Record: ${calculateTrackRecordScore(s.queen)}</span>
+                            </div>
+                        </div>
+                    </div>
+                 </button>`;
     });
-    html += `</div>`;
+
+    html += `</div>
+             <div class="text-center mt-6">
+                <button id="confirm-finalists-btn" class="main-button px-8 py-3 rounded-lg text-xl font-display tracking-widest" disabled>Confirm Finalists</button>
+             </div>`;
+             
     resultsContainer.innerHTML = html;
-    resultsContainer.querySelectorAll('button').forEach(btn => {
+
+    const confirmBtn = document.getElementById('confirm-finalists-btn');
+
+    resultsContainer.querySelectorAll('button[data-top2-id]').forEach(btn => {
         btn.addEventListener('click', e => {
-            e.currentTarget.classList.toggle('selected');
             const queenId = e.currentTarget.dataset.top2Id;
+
             if (selectedTop2.includes(queenId)) {
+                // Deselect
                 selectedTop2 = selectedTop2.filter(id => id !== queenId);
-            } else if (selectedTop2.length < 2) {
+                e.currentTarget.classList.remove('selected');
+            } else if (selectedTop2.length < 4) {
+                // Select
                 selectedTop2.push(queenId);
+                e.currentTarget.classList.add('selected');
             }
-            if (selectedTop2.length === 2) {
-                resultsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
-                setTimeout(() => onTop2Selected(selectedTop2), 500);
+            
+            // Disable unselected buttons if 4 are selected
+            if (selectedTop2.length === 4) {
+                resultsContainer.querySelectorAll('button[data-top2-id]:not(.selected)').forEach(b => b.disabled = true);
+            } else {
+                resultsContainer.querySelectorAll('button[data-top2-id]').forEach(b => b.disabled = false);
+            }
+
+            // Update confirm button state
+            if (selectedTop2.length >= 2 && selectedTop2.length <= 4) {
+                confirmBtn.disabled = false;
+            } else {
+                confirmBtn.disabled = true;
             }
         });
     });
+
+    // Add listener for the new confirm button
+    confirmBtn.addEventListener('click', () => {
+        onTop2Selected(selectedTop2);
+    });
+
     advanceButton.classList.add('hidden');
 }
 
-export function promptForWinnerCrown(q1, q2, score1, score2, phaseSubheader, resultsContainer, advanceButton, onWinnerCrowned, calculateTrackRecordScore) {
+/**
+ * MODIFIED: Accepts an array of finalists (2-4) and prompts to crown one.
+ */
+export function promptForWinnerCrown(finalists, phaseSubheader, resultsContainer, advanceButton, onWinnerCrowned, calculateTrackRecordScore) {
     phaseSubheader.textContent = 'The Final Showdown';
-    let html = `<div class="text-center mb-6"><h3 class="text-3xl font-display tracking-widest text-pink-400">The time has come... to lip sync... for the CROWN!</h3><p class="text-gray-300">Who delivered the winning performance?</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
-    const createButton = (q, score) => `<button class="secondary-button w-full p-4 rounded-lg flex items-center gap-4" data-winner-id="${q.id}"><img src="${q.image}" class="w-24 h-24 rounded-full object-cover" alt="${q.name}"><div class="flex-1 text-left"><p class="text-2xl font-display tracking-wider">${q.name}</p><div class="text-sm mt-2"><p><span class="font-semibold">Lip Sync Performance Score:</span> ${score.toFixed(0)}</p><p><span class="font-semibold">Final Track Record:</span> ${calculateTrackRecordScore(q)}</p></div></div></button>`;
-    html += createButton(q1, score1);
-    html += createButton(q2, score2);
+    let html = `<div class="text-center mb-6">
+                    <h3 class="text-3xl font-display tracking-widest text-pink-400">The time has come... to lip sync... for the CROWN!</h3>
+                    <p class="text-gray-300">Who delivered the winning performance?</p>
+                </div>
+                <div class="space-y-3 max-w-2xl mx-auto">`; // Single column layout
+
+    const createButton = (q) => {
+        // Calculate lip sync score here just for display
+        const score = q.stats.lipsync * 10 + Math.random() * 25;
+        return `<button class="secondary-button w-full p-4 rounded-lg flex items-center gap-4" data-winner-id="${q.id}">
+                    <img src="${q.image}" class="w-24 h-24 rounded-full object-cover" alt="${q.name}">
+                    <div class="flex-1 text-left">
+                        <p class="text-2xl font-display tracking-wider">${q.name}</p>
+                        <div class="text-sm mt-2">
+                            <p><span class="font-semibold">Lip Sync Performance Score:</span> ${score.toFixed(0)}</p>
+                            <p><span class="font-semibold">Final Track Record:</span> ${calculateTrackRecordScore(q)}</p>
+                        </div>
+                    </div>
+                </button>`;
+    };
+    
+    finalists.forEach(q => {
+        html += createButton(q);
+    });
+
     html += `</div>`;
     resultsContainer.innerHTML = html;
+
     resultsContainer.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => {
             resultsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
             const winnerId = btn.dataset.winnerId;
-            const winner = winnerId === q1.id ? q1 : q2;
-            const runnerUp = winnerId === q1.id ? q2 : q1;
-            setTimeout(() => onWinnerCrowned(winner, runnerUp), 500);
+            
+            const winner = finalists.find(q => q.id === winnerId);
+            const runnersUp = finalists.filter(q => q.id !== winnerId); // Get all others
+            
+            setTimeout(() => onWinnerCrowned(winner, runnersUp), 500); // Pass runnersUp as array
         });
     });
     advanceButton.classList.add('hidden');
 }
-

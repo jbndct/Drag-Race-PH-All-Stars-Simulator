@@ -9,7 +9,7 @@ export let gameState = {
     currentCast: [],
     fullCast: [],
     shuffledChallenges: [],
-    top2: [],
+    finalists: [], // Renamed from top2
     episodeNumber: 1,
     episodePhase: 'judgesCritiques',
     episodeResults: {},
@@ -30,7 +30,7 @@ export function resetState() {
     gameState.currentCast = [];
     gameState.fullCast = [];
     gameState.shuffledChallenges = [];
-    gameState.top2 = [];
+    gameState.finalists = []; // Renamed from top2
     gameState.episodeNumber = 1;
     gameState.episodePhase = 'judgesCritiques';
     gameState.episodeResults = {};

@@ -299,8 +299,11 @@ function runFinaleTop2Phase() {
         const totalScore = (normalizedTrack * 0.7) + (normalizedPerf * 0.3);
         return { queen, totalScore, trackRecordScore };
     }).sort((a, b) => b.totalScore - a.totalScore);
-    gameState.top2 = [finaleScores[0], finaleScores[1]];
-    const eliminated = gameState.currentCast.filter(q => !gameState.top2.some(t => t.queen.id === q.id));
+    
+    // Standard mode still defaults to Top 2
+    gameState.finalists = [finaleScores[0], finaleScores[1]];
+    
+    const eliminated = gameState.currentCast.filter(q => !gameState.finalists.some(t => t.queen.id === q.id));
     eliminated.forEach(elimQueen => {
         const queenInFullCast = gameState.fullCast.find(q => q.id === elimQueen.id);
         if (queenInFullCast) {
@@ -309,37 +312,50 @@ function runFinaleTop2Phase() {
             queenInFullCast.epElim = gameState.episodeNumber;
         }
     });
-    ui.displayTop2Results(gameState.top2, eliminated, resultsContainer);
+    
+    // Use the renamed UI function
+    ui.displayFinaleFinalists(gameState.finalists, eliminated, resultsContainer);
     ui.updateAdvanceButton('Lip Sync For The Crown!', advanceButton, restartButton);
 }
 
 function runLipsyncForTheCrownPhase() {
     gameState.episodePhase = 'lipsyncForTheCrown';
     if (gameState.gameMode === 'standard') {
-        const [q1, q2] = gameState.top2;
+        // Standard mode (Top 2)
+        const [q1, q2] = gameState.finalists; // Use renamed state
         const finalScore1 = (calculateTrackRecordScore(q1.queen) * 0.8) + (q1.queen.stats.lipsync * 0.2);
         const finalScore2 = (calculateTrackRecordScore(q2.queen) * 0.8) + (q2.queen.stats.lipsync * 0.2);
         const winner = finalScore1 >= finalScore2 ? q1.queen : q2.queen;
         const runnerUp = finalScore1 < finalScore2 ? q1.queen : q2.queen;
-        handleWinnerCrowning(winner, runnerUp);
+        handleWinnerCrowning(winner, [runnerUp]); // Pass runner-up as an array
     } else {
-        const [q1, q2] = gameState.top2.map(t => t.queen);
-        const score1 = q1.stats.lipsync * 10 + Math.random() * 25;
-        const score2 = q2.stats.lipsync * 10 + Math.random() * 25;
-        ui.promptForWinnerCrown(q1, q2, score1, score2, phaseSubheader, resultsContainer, advanceButton, handleWinnerCrowning, calculateTrackRecordScore);
+        // Mama Pao Mode (2-4 finalists)
+        const finalists = gameState.finalists.map(f => f.queen);
+        // Pass all finalists to the updated prompt
+        ui.promptForWinnerCrown(finalists, phaseSubheader, resultsContainer, advanceButton, handleWinnerCrowning, calculateTrackRecordScore);
     }
 }
 
-function handleWinnerCrowning(winner, runnerUp) {
+/**
+ * MODIFIED: Accepts a single winner and an array of runners-up.
+ */
+function handleWinnerCrowning(winner, runnersUp) { // runnersUp is now an array
     const winnerInFull = gameState.fullCast.find(q => q.id === winner.id);
-    const runnerUpInFull = gameState.fullCast.find(q => q.id === runnerUp.id);
     if (winnerInFull) winnerInFull.trackRecord.push('WINNER');
-    if (runnerUpInFull) runnerUpInFull.trackRecord.push('RUNNER-UP');
-    ui.displayWinner(winner, runnerUp, resultsContainer);
+
+    // Loop through all runners-up
+    runnersUp.forEach(runnerUp => {
+        const runnerUpInFull = gameState.fullCast.find(q => q.id === runnerUp.id);
+        if (runnerUpInFull) runnerUpInFull.trackRecord.push('RUNNER-UP');
+    });
+
+    // Pass the array to the updated UI function
+    ui.displayWinner(winner, runnersUp, resultsContainer);
     ui.showRestartButton(advanceButton, restartButton, () => {
         ui.displayTrackRecord(gameState.fullCast, gameState.shuffledChallenges, resultsContainer, calculateTrackRecordScore, true);
     });
 }
+
 
 function assignPlacements(results) {
     const len = results.length;
@@ -426,10 +442,19 @@ function handleLipSyncDecision(decision) {
     ui.updateAdvanceButton('View Track Record', advanceButton, restartButton);
 }
 
+/**
+ * MODIFIED: This is the callback from the new promptForTop2.
+ * It receives an array of 2-4 selected IDs.
+ */
 function handleTop2Selection(selectedIds) {
-    gameState.episodePhase = 'finaleTop2';
-    gameState.top2 = gameState.currentCast.filter(q => selectedIds.includes(q.id)).map(queen => ({ queen, trackRecordScore: calculateTrackRecordScore(queen) }));
+    gameState.episodePhase = 'finaleTop2'; 
+    // Use gameState.finalists and store the selected queens
+    gameState.finalists = gameState.currentCast
+        .filter(q => selectedIds.includes(q.id))
+        .map(queen => ({ queen, trackRecordScore: calculateTrackRecordScore(queen) }));
+    
     const eliminated = gameState.currentCast.filter(q => !selectedIds.includes(q.id));
+    
     eliminated.forEach(elimQueen => {
         const queenInFullCast = gameState.fullCast.find(q => q.id === elimQueen.id);
         if (queenInFullCast) {
@@ -438,6 +463,8 @@ function handleTop2Selection(selectedIds) {
             queenInFullCast.epElim = gameState.episodeNumber;
         }
     });
-    ui.displayTop2Results(gameState.top2, eliminated, resultsContainer);
+    
+    // Call the renamed UI function to display 2-4 finalists
+    ui.displayFinaleFinalists(gameState.finalists, eliminated, resultsContainer);
     ui.updateAdvanceButton('Lip Sync For The Crown!', advanceButton, restartButton);
 }
