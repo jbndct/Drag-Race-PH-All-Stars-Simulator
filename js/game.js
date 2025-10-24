@@ -139,7 +139,7 @@ export function advanceEpisode() {
             ui.updateAdvanceButton("See Tops & Bottoms", advanceButton, restartButton);
             break;
         case 'gatheringLineup':
-            stdEpisode.runGatherTopsAndBottomsPhase();
+            stdEpisode.runTopsAndBottomsCritiquesPhase();
             break;
         case 'gatherTopsAndBottoms':
             stdEpisode.runTopsAndBottomsCritiquesPhase();

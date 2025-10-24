@@ -37,11 +37,12 @@ export function runJudgesCritiquesPhase() {
 export function runSafetyCeremonyPhase() {
     // If few queens or no safe queens, skip straight to the lineup
     if (gameState.currentCast.length <= 6 || gameState.episodeResults.safeQueens.length === 0) {
-        gameState.episodePhase = 'gatheringLineup'; // Set phase to lineup intermediate
-        runGatherTopsAndBottomsPhase(); // Display the lineup directly
+        gameState.episodePhase = 'gatheringLineup'; // Set the *next* phase
+        ui.displayGatheringScreen(gameState.episodeResults.placements, phaseSubheader, resultsContainer); // Display the content for this phase
+        ui.updateAdvanceButton("Proceed to Critiques", advanceButton, restartButton); // Update the button text
         return; 
     }
-    // Otherwise, show the safety ceremony screen
+    // Otherwise, show the normal safety ceremony screen
     gameState.episodePhase = 'safetyCeremony';
     ui.displaySafetyCeremony(gameState.currentCast, phaseSubheader, resultsContainer);
     ui.updateAdvanceButton('Reveal Safe Queens', advanceButton, restartButton);
