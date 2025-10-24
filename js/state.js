@@ -39,3 +39,55 @@ export function resetState() {
     gameState.doubleShantayCount = 0;
     gameState.doubleSashayCount = 0;
 }
+
+/**
+ * Saves the current gameState to localStorage.
+ */
+export function saveGameState() {
+    try {
+        const stateToSave = JSON.stringify(gameState);
+        localStorage.setItem('dragRaceAllStarsSave', stateToSave);
+        console.log('Game state saved!');
+        return true;
+    } catch (e) {
+        console.error("Could not save game state:", e);
+        return false;
+    }
+}
+
+/**
+ * Loads the gameState from localStorage.
+ * @returns {boolean} True if a saved state was successfully loaded, false otherwise.
+ */
+export function loadGameState() {
+    const savedState = localStorage.getItem('dragRaceAllStarsSave');
+    if (savedState) {
+        try {
+            const loadedState = JSON.parse(savedState);
+            // Overwrite the existing gameState with the loaded data
+            Object.assign(gameState, loadedState);
+            console.log('Game state loaded!');
+            return true;
+        } catch (e) {
+            console.error("Could not load game state:", e);
+            return false;
+        }
+    }
+    return false;
+}
+
+/**
+ * Checks if a saved game exists in localStorage.
+ * @returns {boolean}
+ */
+export function checkForSavedGame() {
+    return localStorage.getItem('dragRaceAllStarsSave') !== null;
+}
+
+/**
+ * Deletes the saved game from localStorage.
+ */
+export function clearSavedGame() {
+    localStorage.removeItem('dragRaceAllStarsSave');
+    console.log('Saved game cleared!');
+}

@@ -6,7 +6,7 @@
 
 import { queens, challenges } from './data.js';
 import * as ui from './ui.js';
-import { gameState, constants, resetState } from './state.js';
+import { gameState, constants, resetState, saveGameState, loadGameState, checkForSavedGame, clearSavedGame } from './state.js';
 import { calculateTrackRecordScore } from './utils.js';
 import * as simulation from './simulation.js';
 import * as stdEpisode from './standardEpisode.js';
@@ -17,7 +17,9 @@ import * as mamaPao from './mamaPao.js';
 const bodyContainer = document.getElementById('body-container');
 const menuView = document.getElementById('menu-view');
 const standardModeBtn = document.getElementById('standard-mode-btn'); 
-const mamapaoModeBtn = document.getElementById('mamapao-mode-btn');  
+const mamapaoModeBtn = document.getElementById('mamapao-mode-btn');
+const loadGameBtn = document.getElementById('load-game-btn'); // Add this
+const saveGameBtn = document.getElementById('save-game-btn'); // Add this
 const queenGrid = document.getElementById('queen-grid');            
 const selectionView = document.getElementById('selection-view');
 const simulationView = document.getElementById('simulation-view');
@@ -198,6 +200,68 @@ function runLipSyncResultPhase() {
     ui.updateAdvanceButton('View Track Record', advanceButton, restartButton);
 }
 
+function rehydrateUI() {
+    const { episodePhase, finalScores, episodeResults, currentCast, fullCast, shuffledChallenges, episodeNumber, eliminatedQueens } = gameState;
+
+    const challenge = shuffledChallenges[(episodeNumber - 1) % shuffledChallenges.length];
+    ui.displayEpisodeHeader(episodeNumber, challenge, episodeHeader, phaseSubheader);
+
+    // A big switch to restore the view for any given phase
+    switch(episodePhase) {
+        case 'placements': // This is the Mama Pao prompt screen
+            ui.promptForCustomPlacements(finalScores, phaseSubheader, resultsContainer, advanceButton, mamaPao.handleCustomPlacementsSelection, currentCast.length);
+            break;
+        case 'judgesCritiques':
+            stdEpisode.runJudgesCritiquesPhase();
+            break;
+        case 'safetyCeremony':
+        case 'gatheringLineup':
+            stdEpisode.runSafetyCeremonyPhase();
+            break;
+        case 'gatherTopsAndBottoms':
+            stdEpisode.runGatherTopsAndBottomsPhase();
+            break;
+        case 'topsAndBottomsCritiques':
+            stdEpisode.runTopsAndBottomsCritiquesPhase();
+            break;
+        case 'topsReveal':
+            stdEpisode.runTopsRevealPhase();
+            break;
+        case 'winnerReveal':
+            stdEpisode.runWinnerRevealPhase();
+            break;
+        case 'bottomsReveal':
+            stdEpisode.runBottomsRevealPhase();
+            break;
+        case 'lowReveal':
+            stdEpisode.runLowRevealPhase();
+            break;
+        case 'lipsync':
+            stdEpisode.runLipSyncPhase();
+            break;
+        case 'lipsyncResult':
+            ui.displayLipSyncResults(episodeResults, eliminatedQueens, phaseSubheader, resultsContainer);
+            ui.updateAdvanceButton('View Track Record', advanceButton, restartButton);
+            break;
+        case 'trackRecord':
+            ui.displayTrackRecord(fullCast, shuffledChallenges, resultsContainer, calculateTrackRecordScore);
+            const buttonText = currentCast.length <= 4 ? 'Start The Finale!' : 'Next Episode';
+            ui.updateAdvanceButton(buttonText, advanceButton, restartButton);
+            break;
+        case 'finale':
+            finale.runFinalePerformancePhase();
+            break;
+        case 'finaleTop2':
+            finale.runFinaleTop2Phase();
+            break;
+        case 'lipsyncForTheCrown':
+            finale.runLipsyncForTheCrownPhase();
+            break;
+        // Note: Mama Pao's interactive phases aren't included as they require user input to proceed
+    }
+
+    ui.switchView(simulationView, bodyContainer, episodePhase);
+}
 
 // --- APP ENTRY POINT ---
 
@@ -205,14 +269,47 @@ window.addEventListener('load', () => {
     // Initialize all modules
     initModules();
 
-    // Setup main event listeners
+    // Check for a saved game and show the button if it exists
+    if (checkForSavedGame()) {
+        loadGameBtn.classList.remove('hidden');
+    }
+
+    // --- Event Listeners ---
     standardModeBtn.addEventListener('click', () => selectMode('standard'));
     mamapaoModeBtn.addEventListener('click', () => selectMode('mamapao'));
+
+    // Load Game button
+    loadGameBtn.addEventListener('click', () => {
+        if (loadGameState()) {
+            rehydrateUI();
+        } else {
+            alert("Failed to load saved game. The file might be corrupted.");
+        }
+    });
+
+    // Save Game button
+    saveGameBtn.addEventListener('click', () => {
+        if (saveGameState()) {
+            // Give user feedback
+            saveGameBtn.textContent = "Saved!";
+            setTimeout(() => { saveGameBtn.textContent = "Save Game"; }, 1500);
+        } else {
+            alert("Could not save the game.");
+        }
+    });
+
     ui.populateQueenGrid(queens, queenGrid, toggleQueenSelection);
     startButton.addEventListener('click', () => { if (!startButton.disabled) startCompetition(); });
     advanceButton.addEventListener('click', advanceEpisode);
-    restartButton.addEventListener('click', () => window.location.reload());
-    
+
+    // Modify the restart button to also clear the saved game
+    restartButton.addEventListener('click', () => {
+        if (confirm("Are you sure you want to start a new season? Your saved progress will be deleted.")) {
+            clearSavedGame();
+            window.location.reload();
+        }
+    });
+
     // Initial UI setup
     ui.updateSelectionUI(gameState.selectedCast, castList, castPlaceholder, castCounter, startButton, instructions, constants.MIN_CAST_SIZE, constants.MAX_CAST_SIZE);
     ui.switchView(menuView, bodyContainer, gameState.episodePhase);

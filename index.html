@@ -37,6 +37,7 @@
 
             <div class="space-y-5">
                 <button id="standard-mode-btn" class="main-button w-full py-4 rounded-lg text-2xl font-display tracking-widest">Standard Mode</button>
+                <button id="load-game-btn" class="hidden secondary-button w-full py-4 rounded-lg text-2xl font-display tracking-widest border-amber-400">Load Saved Season</button>
                 <button id="mamapao-mode-btn" class="secondary-button w-full py-4 rounded-lg text-2xl font-display tracking-widest">Mama Pao Mode</button>
             </div>
         </div>
@@ -68,6 +69,9 @@
             <p id="phase-subheader" class="text-gray-300 mt-2 max-w-3xl mx-auto"></p>
         </header>
         <main id="results-container" class="flex-grow bg-black/30 backdrop-blur-sm rounded-lg p-4 md:p-6 overflow-y-auto no-scrollbar"></main>
+        <div id="save-button-container" class="absolute top-4 right-4">
+            <button id="save-game-btn" class="secondary-button px-6 py-2 rounded-lg text-lg font-display tracking-widest">Save</button>
+        </div>
         <footer class="mt-6 text-center">
             <button id="advance-button" class="btn-primary px-8 py-3 rounded-lg text-xl font-display tracking-widest"></button>
             <button id="restart-button" class="hidden bg-gray-600 hover:bg-gray-500 text-white px-8 py-3 rounded-lg text-xl font-display tracking-widest">Start New Season</button>

@@ -108,12 +108,16 @@ export function runLipsyncForTheCrownPhase() {
  */
 export function handleWinnerCrowning(winner, runnersUp) { // runnersUp is now an array
     const winnerInFull = gameState.fullCast.find(q => q.id === winner.id);
-    if (winnerInFull) winnerInFull.trackRecord.push('WINNER');
+    if (winnerInFull && winnerInFull.trackRecord[winnerInFull.trackRecord.length - 1] !== 'WINNER') {
+        winnerInFull.trackRecord.push('WINNER');
+    }
 
     // Loop through all runners-up
     runnersUp.forEach(runnerUp => {
         const runnerUpInFull = gameState.fullCast.find(q => q.id === runnerUp.id);
-        if (runnerUpInFull) runnerUpInFull.trackRecord.push('RUNNER-UP');
+        if (runnerUpInFull && runnerUpInFull.trackRecord[runnerUpInFull.trackRecord.length - 1] !== 'RUNNER-UP') {
+            runnerUpInFull.trackRecord.push('RUNNER-UP');
+        }
     });
 
     // Pass the array to the updated UI function
